@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blood Requests – Blood Bank Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/bloodbank-portal.css">
+  <style>
+    .requests-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+    .request-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0; }
+    .detail-item { background:#F9FAFB; border-radius:10px; padding:12px 14px; }
+    .detail-item-label { font-size:0.75rem; color:var(--text-gray); font-weight:600; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:3px; }
+    .detail-item-value { font-weight:700; font-size:0.95rem; }
+    .live-dot { width:8px;height:8px;background:#00B894;border-radius:50%;animation:pulse-dot 1.5s infinite;display:inline-block; }
+  </style>
+</head>
+<body>
+<div class="portal-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">🩸 Rakt<span>Setu</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="inventory.html" class="sidebar-link"><i class="bi bi-droplet-fill"></i> Inventory</a>
+      <a href="requests.html" class="sidebar-link active"><i class="bi bi-bell-fill"></i> Blood Requests</a>
+      <a href="verify-donation.html" class="sidebar-link"><i class="bi bi-patch-check-fill"></i> Verify Donation</a>
+      <a href="analytics.html" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i> Analytics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="sidebar-bank-name"></div>
+      <a href="login.html" class="sidebar-link" style="color:rgba(255,255,255,0.6);"><i class="bi bi-box-arrow-left"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <div class="portal-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="d-lg-none border-0 bg-transparent" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list" style="font-size:1.4rem;"></i></button>
+        <div>
+          <div class="portal-topbar-title">Blood Requests</div>
+          <div style="font-size:0.78rem;color:var(--text-gray);"><span class="live-dot"></span> Live updates</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span id="active-count-badge" style="background:#FEE2E2;color:#DC2626;padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;">0 Active</span>
+      </div>
+    </div>
+
+    <div class="portal-content">
+      <div class="dashboard-stats" style="margin-bottom:24px;">
+        <div class="stat-card"><div class="stat-icon red">🆘</div><div><div class="stat-value" id="s-active">—</div><div class="stat-label">Active</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-value" id="s-fulfilled">—</div><div class="stat-label">Fulfilled</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">⚠️</div><div><div class="stat-value" id="s-critical">—</div><div class="stat-label">Critical</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">📊</div><div><div class="stat-value" id="s-total">—</div><div class="stat-label">Total</div></div></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="requests-toolbar">
+        <div class="filter-pills">
+          <div class="filter-pill active" onclick="filterRequests('ALL',this)">All</div>
+          <div class="filter-pill" onclick="filterRequests('ACTIVE',this)">Active</div>
+          <div class="filter-pill" onclick="filterRequests('CRITICAL',this)">Critical 🚨</div>
+          <div class="filter-pill" onclick="filterRequests('FULFILLED',this)">Fulfilled</div>
+          <div class="filter-pill" onclick="filterRequests('CLOSED',this)">Closed</div>
+        </div>
+        <div class="search-bar-wrapper" style="flex:1;min-width:200px;max-width:300px;">
+          <i class="bi bi-search"></i>
+          <input type="text" class="search-bar" id="search-requests" placeholder="Search hospital or blood group..." oninput="searchRequests(this.value)">
+        </div>
+        <select id="sort-requests" class="form-control-rs" style="width:auto;" onchange="sortRequests(this.value)">
+          <option value="newest">Newest First</option>
+          <option value="urgency">By Urgency</option>
+          <option value="blood">By Blood Group</option>
+        </select>
+      </div>
+
+      <!-- Requests Table -->
+      <div style="background:white;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);">
+        <div style="overflow-x:auto;">
+          <table class="table-rs w-100" id="requestsTable">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Blood</th>
+                <th>Hospital</th>
+                <th>Contact</th>
+                <th>Units</th>
+                <th>Urgency</th>
+                <th>Status</th>
+                <th>Posted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="requestsTbody">
+              <tr><td colspan="9" style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Request Detail Modal -->
+<div class="modal-overlay" id="requestModal">
+  <div class="modal-rs" style="max-width:560px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Request Details</h3>
+      <button class="modal-close" onclick="document.getElementById('requestModal').classList.remove('show')">✕</button>
+    </div>
+    <div id="modal-request-body"></div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, timeAgo, formatDateTime } from '../js/utils.js';
+
+  document.getElementById('sidebar-bank-name').textContent = localStorage.getItem('raktsetu_bb_name') || 'Demo Blood Bank';
+  const bbId = localStorage.getItem('raktsetu_bb_id') || 'demo_bank';
+
+  const MOCK = [
+    { id:'r1', request_id:'RKT001', seeker_name:'Aditya Sharma', seeker_phone:'+919876543210', blood_group_needed:'O-', units_needed:2, hospital_name:'Bombay Hospital', hospital_address:'New Palasia, Indore, MP', urgency_level:'CRITICAL', status:'ACTIVE', notes:'Patient in ICU, needs O- urgently', created_at:{ toDate:()=>new Date(Date.now()-1800000) } },
+    { id:'r2', request_id:'RKT002', seeker_name:'Meena Kaur', seeker_phone:'+919876543211', blood_group_needed:'A+', units_needed:1, hospital_name:'AIIMS Bhopal', hospital_address:'Saket Nagar, Bhopal, MP', urgency_level:'URGENT', status:'ACTIVE', notes:null, created_at:{ toDate:()=>new Date(Date.now()-7200000) } },
+    { id:'r3', request_id:'RKT003', seeker_name:'Ramesh Patel', seeker_phone:'+919876543212', blood_group_needed:'B+', units_needed:3, hospital_name:'City Hospital', hospital_address:'AB Road, Indore, MP', urgency_level:'NORMAL', status:'FULFILLED', fulfilled_by:'City Blood Bank', fulfilled_at:{ toDate:()=>new Date(Date.now()-3600000) }, created_at:{ toDate:()=>new Date(Date.now()-86400000) } },
+    { id:'r4', request_id:'RKT004', seeker_name:'Suresh Kumar', seeker_phone:'+919876543213', blood_group_needed:'AB+', units_needed:2, hospital_name:'MY Hospital', hospital_address:'MG Road, Indore, MP', urgency_level:'URGENT', status:'ACTIVE', notes:'Surgery scheduled for tomorrow', created_at:{ toDate:()=>new Date(Date.now()-14400000) } },
+    { id:'r5', request_id:'RKT005', seeker_name:'Priya Joshi', seeker_phone:'+919876543214', blood_group_needed:'O+', units_needed:1, hospital_name:'Bombay Hospital', hospital_address:'New Palasia, Indore', urgency_level:'NORMAL', status:'CLOSED', created_at:{ toDate:()=>new Date(Date.now()-172800000) } },
+  ];
+
+  let allRequests = [];
+  let filteredRequests = [];
+  let currentFilter = 'ALL';
+
+  function updateStats(reqs) {
+    document.getElementById('s-total').textContent = reqs.length;
+    document.getElementById('s-active').textContent = reqs.filter(r=>r.status==='ACTIVE').length;
+    document.getElementById('s-fulfilled').textContent = reqs.filter(r=>r.status==='FULFILLED').length;
+    document.getElementById('s-critical').textContent = reqs.filter(r=>r.urgency_level==='CRITICAL'&&r.status==='ACTIVE').length;
+    document.getElementById('active-count-badge').textContent = reqs.filter(r=>r.status==='ACTIVE').length + ' Active';
+  }
+
+  function renderTable(reqs) {
+    const tbody = document.getElementById('requestsTbody');
+    if (reqs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-gray);">No requests found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = reqs.map(r => `
+      <tr style="cursor:pointer;" onclick="viewRequest('${r.id}')">
+        <td style="font-family:'Poppins',sans-serif;font-size:0.82rem;font-weight:700;color:#DC3545;">${r.request_id}</td>
+        <td><span class="blood-badge sm">${r.blood_group_needed}</span></td>
+        <td style="font-weight:600;font-size:0.88rem;max-width:160px;">${r.hospital_name}<br><span style="font-size:0.75rem;color:var(--text-gray);font-weight:400;">${r.hospital_address?.substring(0,30)}</span></td>
+        <td><a href="tel:${r.seeker_phone}" onclick="event.stopPropagation()" style="color:#DC3545;font-weight:600;font-size:0.85rem;"><i class="bi bi-telephone-fill"></i> Call</a><br><span style="font-size:0.75rem;color:var(--text-gray);">${r.seeker_name}</span></td>
+        <td style="font-weight:700;text-align:center;">${r.units_needed}</td>
+        <td><span class="urgency-badge ${r.urgency_level?.toLowerCase()}">${r.urgency_level}</span></td>
+        <td><span class="status-badge ${r.status?.toLowerCase()}">${r.status}</span></td>
+        <td style="font-size:0.8rem;color:var(--text-gray);white-space:nowrap;">${timeAgo(r.created_at)}</td>
+        <td onclick="event.stopPropagation()">
+          <div style="display:flex;gap:6px;">
+            ${r.status==='ACTIVE' ? `
+              <button class="action-btn fulfill" onclick="updateStatus('${r.id}','FULFILLED')"><i class="bi bi-check-lg"></i></button>
+              <button class="action-btn reject" onclick="updateStatus('${r.id}','CLOSED')"><i class="bi bi-x-lg"></i></button>` :
+              `<button class="action-btn view" onclick="viewRequest('${r.id}')"><i class="bi bi-eye"></i></button>`
+            }
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  window.filterRequests = function(filter, el) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    applyFilters();
+  };
+
+  window.searchRequests = function(val) { applyFilters(val); };
+
+  window.sortRequests = function(by) {
+    if (by === 'urgency') {
+      const order = { CRITICAL:0, URGENT:1, NORMAL:2 };
+      filteredRequests.sort((a,b) => (order[a.urgency_level]||2) - (order[b.urgency_level]||2));
+    } else if (by === 'blood') {
+      filteredRequests.sort((a,b) => a.blood_group_needed.localeCompare(b.blood_group_needed));
+    } else {
+      filteredRequests.sort((a,b) => b.created_at.toDate() - a.created_at.toDate());
+    }
+    renderTable(filteredRequests);
+  };
+
+  function applyFilters(search = document.getElementById('search-requests').value) {
+    filteredRequests = allRequests.filter(r => {
+      const matchFilter = currentFilter === 'ALL' ? true :
+        currentFilter === 'CRITICAL' ? r.urgency_level === 'CRITICAL' && r.status === 'ACTIVE' :
+        r.status === currentFilter;
+      const matchSearch = !search || r.hospital_name?.toLowerCase().includes(search.toLowerCase()) ||
+        r.blood_group_needed?.toLowerCase().includes(search.toLowerCase()) ||
+        r.request_id?.toLowerCase().includes(search.toLowerCase());
+      return matchFilter && matchSearch;
+    });
+    renderTable(filteredRequests);
+  }
+
+  window.viewRequest = function(id) {
+    const r = allRequests.find(r=>r.id===id);
+    if (!r) return;
+    document.getElementById('modal-request-body').innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="blood-badge lg">${r.blood_group_needed}</div>
+        <div>
+          <div style="font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:800;">${r.hospital_name}</div>
+          <div style="font-size:0.85rem;color:var(--text-gray);">${r.hospital_address}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <span class="urgency-badge ${r.urgency_level?.toLowerCase()}">${r.urgency_level}</span>
+          <span class="status-badge ${r.status?.toLowerCase()}">${r.status}</span>
+        </div>
+      </div>
+      <div class="request-detail-grid">
+        <div class="detail-item"><div class="detail-item-label">Request ID</div><div class="detail-item-value" style="color:#DC3545;">${r.request_id}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Units Needed</div><div class="detail-item-value">${r.units_needed} unit(s)</div></div>
+        <div class="detail-item"><div class="detail-item-label">Seeker Name</div><div class="detail-item-value">${r.seeker_name}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Contact</div><div class="detail-item-value"><a href="tel:${r.seeker_phone}" style="color:#DC3545;">${r.seeker_phone}</a></div></div>
+        <div class="detail-item"><div class="detail-item-label">Posted</div><div class="detail-item-value">${timeAgo(r.created_at)}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Blood Group</div><div class="detail-item-value">${r.blood_group_needed}</div></div>
+      </div>
+      ${r.notes ? `<div style="background:#FFF5F5;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:0.88rem;"><strong>Notes:</strong> ${r.notes}</div>` : ''}
+      ${r.status==='ACTIVE' ? `
+        <div style="display:flex;gap:10px;">
+          <button class="btn-primary-red flex-grow-1" style="justify-content:center;" onclick="updateStatus('${r.id}','FULFILLED');document.getElementById('requestModal').classList.remove('show');">
+            <i class="bi bi-check-circle-fill"></i> Mark as Fulfilled
+          </button>
+          <a href="tel:${r.seeker_phone}" class="btn-outline-red" style="padding:12px 18px;"><i class="bi bi-telephone-fill"></i></a>
+        </div>` : ''}`;
+    document.getElementById('requestModal').classList.add('show');
+  };
+
+  window.updateStatus = async function(id, status) {
+    try {
+      await updateDoc(doc(db, 'requests', id), { status, fulfilled_by: status==='FULFILLED' ? bbId : null, fulfilled_at: status==='FULFILLED' ? serverTimestamp() : null, fulfillment_type: status==='FULFILLED' ? 'BLOOD_BANK_STOCK' : null, updated_at: serverTimestamp() });
+    } catch {}
+    const idx = allRequests.findIndex(r=>r.id===id);
+    if (idx !== -1) allRequests[idx] = { ...allRequests[idx], status };
+    updateStats(allRequests);
+    applyFilters();
+    showToast(status==='FULFILLED' ? '✅ Request marked as fulfilled!' : '❌ Request closed.', status==='FULFILLED' ? 'success' : 'info');
+  };
+
+  document.getElementById('requestModal').addEventListener('click', e => {
+    if (e.target===document.getElementById('requestModal')) document.getElementById('requestModal').classList.remove('show');
+  });
+
+  // Load requests
+  try {
+    const q = query(collection(db, 'requests'), orderBy('created_at','desc'));
+    onSnapshot(q, snap => {
+      allRequests = snap.empty ? MOCK : snap.docs.map(d=>({id:d.id,...d.data()}));
+      updateStats(allRequests);
+      applyFilters();
+    });
+  } catch {
+    allRequests = MOCK;
+    updateStats(allRequests);
+    applyFilters();
+  }
+</script>
+</body>
+</html>

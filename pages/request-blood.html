@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Request blood urgently on RaktSetu - connects you to donors and blood banks instantly.">
+  <title>Request Blood – RaktSetu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+
+    /* ── Page Layout: two columns, no scroll ── */
+    .request-page {
+      height: calc(100vh - 64px);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+    }
+
+    /* ── Left: scrollable form area ── */
+    .form-col {
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 28px 32px 28px 40px;
+      background: #F8FAFC;
+    }
+
+    /* ── Right: tips panel, fixed ── */
+    .tips-col {
+      background: white;
+      border-left: 1px solid #E5E7EB;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow-y: auto;
+    }
+
+    /* ── Form Card ── */
+    .form-card {
+      background: white;
+      border-radius: 16px;
+      padding: 26px 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 1px solid #E5E7EB;
+    }
+    .form-card-title { font-family:'Poppins',sans-serif; font-size:1.25rem; font-weight:800; margin-bottom:3px; }
+    .form-card-sub   { color:#4B5563; font-size:0.82rem; margin-bottom:20px; }
+
+    /* ── Urgency Selector — compact ── */
+    .urgency-selector { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:0; }
+    .urgency-option { display:none; }
+    .urgency-label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 11px 14px;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .urgency-label:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+    .urgency-option:checked + .urgency-label { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.10); }
+    .urgency-critical .urgency-option:checked + .urgency-label { border-color:#DC2626; background:#FEF2F2; }
+    .urgency-urgent  .urgency-option:checked + .urgency-label { border-color:#D97706; background:#FFFBEB; }
+    .urgency-normal  .urgency-option:checked + .urgency-label { border-color:#059669; background:#F0FDF4; }
+    .urgency-icon { font-size:1.15rem; flex-shrink:0; line-height:1; }
+    .urgency-text  { display:flex; flex-direction:column; gap:1px; }
+    .urgency-name  { font-family:'Poppins',sans-serif; font-weight:700; font-size:0.82rem; line-height:1.2; }
+    .urgency-desc  { font-size:0.68rem; color:#6B7280; line-height:1.2; }
+    .urgency-critical .urgency-label { color:#DC2626; }
+    .urgency-urgent  .urgency-label  { color:#D97706; }
+    .urgency-normal  .urgency-label  { color:#059669; }
+
+    /* ── Location Detect Button ── */
+    .location-detect-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border: 1.5px solid #3B82F6;
+      border-radius: 8px;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .location-detect-btn:hover { background:#DBEAFE; transform:translateY(-1px); }
+    .location-detect-btn.loading { opacity:0.7; cursor:not-allowed; }
+    .location-detect-btn.success { border-color:#059669; background:#F0FDF4; color:#059669; }
+    .location-detect-btn.error   { border-color:#DC2626; background:#FEF2F2; color:#DC2626; }
+
+    .location-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .location-row > div:first-child { flex: 1; }
+
+    /* ── Tips Panel ── */
+    .tips-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tip-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      background: #F9FAFB;
+      margin-bottom: 8px;
+      transition: background 0.15s;
+    }
+    .tip-item:hover { background: #F3F4F6; }
+    .tip-icon { font-size: 1rem; flex-shrink:0; margin-top:1px; }
+    .tip-text { font-size: 0.82rem; color: #374151; line-height: 1.5; }
+    .tip-text strong { display:block; font-weight:700; color:#1E2328; font-size:0.84rem; margin-bottom:1px; }
+
+    /* ── Info box ── */
+    .info-box {
+      background: #FFF7ED;
+      border: 1px solid #FED7AA;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      color: #92400E;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-top: 14px;
+    }
+
+    /* ── What happens next ── */
+    .next-steps { margin-top: 20px; }
+    .next-steps-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: #1E2328;
+    }
+    .next-step-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .next-step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#DC3545,#FF6B6B);
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 800;
+      display: flex; align-items:center; justify-content:center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .next-step-text { font-size: 0.8rem; color: #4B5563; line-height: 1.5; }
+
+    /* ── Submit button ── */
+    #submitRequestBtn {
+      width: 100%;
+      justify-content: center;
+      padding: 13px;
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    /* ── Form group tighter ── */
+    .form-group { margin-bottom: 14px; }
+    .row.g-3 { --bs-gutter-y: 0.6rem; }
+
+    /* ── Section divider ── */
+    .divider {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: #9CA3AF; margin: 16px 0 14px;
+    }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:#E5E7EB; }
+
+    /* ── Warning strip ── */
+    .warning-strip {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 9px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: #DC2626;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .request-page { grid-template-columns: 1fr 300px; }
+      .form-col { padding: 22px 24px; }
+    }
+    @media (max-width: 768px) {
+      .request-page { grid-template-columns: 1fr; height: auto; overflow: visible; }
+      .form-col  { padding: 20px 16px; overflow: visible; }
+      .tips-col  { border-left: none; border-top: 1px solid #E5E7EB; padding: 20px 16px; }
+      .location-row { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+
+<link rel="stylesheet" href="../css/navbar.css">
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../index.html">🩸 Rakt<span>Setu</span></a>
+    <ul class="rks-nav">
+
+      <li class="nav-item">
+        <a class="nav-top-link" href="../index.html">Home</a>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Seeker <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link active" href="request-blood.html">
+            <div class="dropdown-icon">🆘</div>
+            <div class="dropdown-text"><span class="dropdown-label">Request Blood</span><span class="dropdown-desc">Post an urgent blood request</span></div>
+          </a>
+          <a class="dropdown-link" href="find-donors.html">
+            <div class="dropdown-icon">🔍</div>
+            <div class="dropdown-text"><span class="dropdown-label">Find Donors</span><span class="dropdown-desc">Search verified donors nearby</span></div>
+          </a>
+          <a class="dropdown-link" href="blood-banks.html">
+            <div class="dropdown-icon">🏥</div>
+            <div class="dropdown-text"><span class="dropdown-label">Blood Banks</span><span class="dropdown-desc">Check live inventory near you</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="seeker-dashboard.html">
+            <div class="dropdown-icon">📋</div>
+            <div class="dropdown-text"><span class="dropdown-label">Track My Request</span><span class="dropdown-desc">View your active requests</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Donor <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="donor-register.html">
+            <div class="dropdown-icon">❤️</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register</span><span class="dropdown-desc">Join as a verified donor</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-dashboard.html">
+            <div class="dropdown-icon">📊</div>
+            <div class="dropdown-text"><span class="dropdown-label">My Dashboard</span><span class="dropdown-desc">Track donations & availability</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-confirm.html">
+            <div class="dropdown-icon">✅</div>
+            <div class="dropdown-text"><span class="dropdown-label">Confirm Donation</span><span class="dropdown-desc">Verify using Tracking ID</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item nav-item-last">
+        <button class="nav-top-link" aria-haspopup="true">
+          Blood Bank <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown nav-dropdown-right">
+          <a class="dropdown-link" href="../bloodbank-portal/login.html">
+            <div class="dropdown-icon">🔐</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Login</span><span class="dropdown-desc">Sign in to your blood bank</span></div>
+          </a>
+          <a class="dropdown-link" href="../bloodbank-portal/bloodbank-register.html">
+            <div class="dropdown-icon">🏦</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register Blood Bank</span><span class="dropdown-desc">Join the RaktSetu network</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="../bloodbank-portal/dashboard.html">
+            <div class="dropdown-icon">📈</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Dashboard</span><span class="dropdown-desc">Manage inventory & requests</span></div>
+          </a>
+        </div>
+      </li>
+
+    </ul>
+    <button class="navbar-toggler" id="mobileToggler" onclick="toggleMobileNav()" aria-label="Menu">
+      <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
+    </button>
+  </div>
+</nav>
+
+<div class="navbar-mobile" id="mobileNav">
+  <a class="mobile-top-link" href="../index.html">🏠 Home</a>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Seeker <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link active" href="request-blood.html"><span class="mobile-link-icon">🆘</span> Request Blood</a>
+      <a class="mobile-link" href="find-donors.html"><span class="mobile-link-icon">🔍</span> Find Donors</a>
+      <a class="mobile-link" href="blood-banks.html"><span class="mobile-link-icon">🏥</span> Blood Banks</a>
+      <a class="mobile-link" href="seeker-dashboard.html"><span class="mobile-link-icon">📋</span> Track My Request</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Donor <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="donor-register.html"><span class="mobile-link-icon">❤️</span> Register</a>
+      <a class="mobile-link" href="donor-dashboard.html"><span class="mobile-link-icon">📊</span> My Dashboard</a>
+      <a class="mobile-link" href="donor-confirm.html"><span class="mobile-link-icon">✅</span> Confirm Donation</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Blood Bank <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="../bloodbank-portal/login.html"><span class="mobile-link-icon">🔐</span> Portal Login</a>
+      <a class="mobile-link" href="../bloodbank-portal/bloodbank-register.html"><span class="mobile-link-icon">🏦</span> Register Blood Bank</a>
+      <a class="mobile-link" href="../bloodbank-portal/dashboard.html"><span class="mobile-link-icon">📈</span> Portal Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    window.addEventListener('scroll', function() {
+      var nb = document.getElementById('mainNavbar');
+      if (nb) nb.classList.toggle('scrolled', window.scrollY > 10);
+    }, {passive: true});
+    window.toggleMobileNav = function() {
+      document.getElementById('mobileNav').classList.toggle('open');
+      document.getElementById('mobileToggler').classList.toggle('open');
+    };
+    window.toggleMobileSection = function(btn) {
+      var links = btn.nextElementSibling;
+      var isOpen = links.classList.contains('open');
+      document.querySelectorAll('.mobile-links').forEach(function(l) { l.classList.remove('open'); });
+      document.querySelectorAll('.mobile-section-btn').forEach(function(b) { b.classList.remove('open'); });
+      if (!isOpen) { links.classList.add('open'); btn.classList.add('open'); }
+    };
+    document.querySelectorAll('.mobile-link, .mobile-top-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobileNav').classList.remove('open');
+        document.getElementById('mobileToggler').classList.remove('open');
+      });
+    });
+  })();
+</script>
+
+<div class="request-page">
+
+  <!-- ══ LEFT: FORM COLUMN ══ -->
+  <div class="form-col">
+    <div class="form-card">
+      <h2 class="form-card-title">🆘 Request Blood</h2>
+      <p class="form-card-sub">Your request is sent instantly to matching donors and nearby blood banks.</p>
+
+      <form id="requestForm" novalidate>
+
+        <!-- Urgency -->
+        <div class="form-group">
+          <label class="form-label">Urgency Level <span class="required">*</span></label>
+          <div class="urgency-selector">
+            <div class="urgency-critical">
+              <input type="radio" name="urgency" id="urgency-critical" value="CRITICAL" class="urgency-option" checked>
+              <label for="urgency-critical" class="urgency-label">
+                <span class="urgency-icon">🚨</span>
+                <span class="urgency-text">
+                  <span class="urgency-name">Critical</span>
+                  <span class="urgency-desc">Within hours</span>
+                </span>
+              </label>
+            </div>
+            <div class="urgency-urgent">
+              <input type="radio" name="urgency" id="urgency-urgent" value="URGENT" class="urgency-option">
+              <label for="urgency-urgent" class="urgency-label">
+                <span class="urgency-icon">⚠️</span>
+                <span class="urgency-text">
+                  <span class="urgency-name">Urgent</span>
+                  <span class="urgency-desc">Within a day</span>
+                </span>
+              </label>
+            </div>
+            <div class="urgency-normal">
+              <input type="radio" name="urgency" id="urgency-normal" value="NORMAL" class="urgency-option">
+              <label for="urgency-normal" class="urgency-label">
+                <span class="urgency-icon">📋</span>
+                <span class="urgency-text">
+                  <span class="urgency-name">Normal</span>
+                  <span class="urgency-desc">Scheduled</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blood Group + Units -->
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label">Blood Group <span class="required">*</span></label>
+              <select id="req-blood-group" class="form-control-rs">
+                <option value="">Select group</option>
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+              </select>
+              <div class="form-error" id="req-blood-group-error">Please select blood group</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label">Units Needed <span class="required">*</span></label>
+              <input type="number" id="req-units" class="form-control-rs" placeholder="1" min="1" max="10" value="1">
+              <div class="form-error" id="req-units-error">Enter 1–10 units</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="divider">Contact Information</div>
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label">Your Name <span class="required">*</span></label>
+              <input type="text" id="seeker-name" class="form-control-rs" placeholder="Patient or guardian">
+              <div class="form-error" id="seeker-name-error">Please enter your name</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label">Contact Number <span class="required">*</span></label>
+              <div style="position:relative;">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6B7280;font-weight:600;font-size:0.85rem;pointer-events:none;">+91</span>
+                <input type="tel" id="seeker-phone" class="form-control-rs" style="padding-left:44px;" placeholder="9876543210" maxlength="10" inputmode="numeric">
+              </div>
+              <div class="form-error" id="seeker-phone-error">Enter valid 10-digit number</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hospital Info -->
+        <div class="divider">Hospital Details</div>
+        <div class="form-group">
+          <label class="form-label">Hospital Name <span class="required">*</span></label>
+          <input type="text" id="hospital-name" class="form-control-rs" placeholder="e.g. AIIMS Bhopal, Bombay Hospital">
+          <div class="form-error" id="hospital-name-error">Please enter the hospital name</div>
+        </div>
+
+        <!-- Hospital Address with Location Detect -->
+        <div class="form-group">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label class="form-label" style="margin-bottom:0;">Hospital Address <span class="required">*</span></label>
+            <button type="button" class="location-detect-btn" id="detectLocBtn" onclick="detectLocation()">
+              <i class="bi bi-geo-alt-fill"></i>
+              <span id="detectBtnText">Detect Location</span>
+            </button>
+          </div>
+          <textarea id="hospital-address" class="form-control-rs" rows="2"
+            placeholder="Full address — or click Detect Location to auto-fill"
+            style="resize:none;"></textarea>
+          <div class="form-error" id="hospital-address-error">Please enter the hospital address</div>
+          <!-- Hidden lat/lng for Firestore -->
+          <input type="hidden" id="hospital-lat" value="">
+          <input type="hidden" id="hospital-lng" value="">
+          <!-- Location status message -->
+          <div id="location-status" style="display:none;font-size:0.76rem;margin-top:4px;font-weight:600;"></div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group">
+          <label class="form-label">
+            Additional Notes
+            <span style="color:#9CA3AF;font-weight:400;font-size:0.75rem;">(Optional)</span>
+          </label>
+          <textarea id="req-notes" class="form-control-rs" rows="2"
+            placeholder="Ward number, patient condition, any other info for donors..."
+            style="resize:none;"></textarea>
+        </div>
+
+        <!-- Warning -->
+        <div class="warning-strip">
+          <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;margin-top:1px;"></i>
+          <span>Your contact number will be shared with potential donors. Keep your phone reachable.</span>
+        </div>
+
+        <!-- Submit -->
+        <button type="button" id="submitRequestBtn" class="btn-primary-red" onclick="submitRequest()">
+          <i class="bi bi-send-fill"></i> Post Blood Request
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: TIPS COLUMN ══ -->
+  <div class="tips-col">
+
+    <div class="tips-title">
+      💡 Tips for Faster Response
+    </div>
+
+    <div class="tip-item">
+      <span class="tip-icon">🚨</span>
+      <div class="tip-text">
+        <strong>Set urgency correctly</strong>
+        Critical requests are prioritised and sent to more donors immediately.
+      </div>
+    </div>
+
+    <div class="tip-item">
+      <span class="tip-icon">📍</span>
+      <div class="tip-text">
+        <strong>Use Detect Location</strong>
+        Auto-detecting your location helps donors find the hospital faster.
+      </div>
+    </div>
+
+    <div class="tip-item">
+      <span class="tip-icon">🏥</span>
+      <div class="tip-text">
+        <strong>Add ward / room number</strong>
+        Include it in Additional Notes so donors can find you quickly.
+      </div>
+    </div>
+
+    <div class="tip-item">
+      <span class="tip-icon">📱</span>
+      <div class="tip-text">
+        <strong>Keep your phone on</strong>
+        Donors will call directly. Stay reachable after posting.
+      </div>
+    </div>
+
+    <div class="tip-item">
+      <span class="tip-icon">🏦</span>
+      <div class="tip-text">
+        <strong>Also check blood banks</strong>
+        <a href="blood-banks.html" style="color:#DC3545;font-weight:600;">View nearby blood banks</a> for immediate stock availability.
+      </div>
+    </div>
+
+    <div class="tip-item">
+      <span class="tip-icon">🔍</span>
+      <div class="tip-text">
+        <strong>Search donors directly</strong>
+        <a href="find-donors.html" style="color:#DC3545;font-weight:600;">Find donors</a> by blood group and call or WhatsApp them yourself.
+      </div>
+    </div>
+
+    <!-- What happens next -->
+    <div class="next-steps">
+      <div class="next-steps-title">What happens after you post?</div>
+      <div class="next-step-item">
+        <div class="next-step-num">1</div>
+        <div class="next-step-text">Nearby blood banks are notified and check their stock</div>
+      </div>
+      <div class="next-step-item">
+        <div class="next-step-num">2</div>
+        <div class="next-step-text">Registered donors matching your blood group get notified</div>
+      </div>
+      <div class="next-step-item">
+        <div class="next-step-num">3</div>
+        <div class="next-step-text">Interested donors click "I Can Donate" — you get their number</div>
+      </div>
+      <div class="next-step-item">
+        <div class="next-step-num">4</div>
+        <div class="next-step-text">Once fulfilled, confirm receipt to close the request ✅</div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <i class="bi bi-shield-check" style="flex-shrink:0;margin-top:1px;"></i>
+      <span>All donors on RaktSetu are phone-verified. Your request is safe and only shared with genuine donors.</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SUCCESS MODAL ══ -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal-rs" style="text-align:center;max-width:500px;">
+    <div style="font-size:3.5rem;margin-bottom:14px;">✅</div>
+    <h3 style="font-size:1.4rem;font-weight:800;margin-bottom:8px;">Request Posted!</h3>
+    <p style="color:#4B5563;font-size:0.88rem;margin-bottom:18px;">Nearby blood banks and donors are being notified right now.</p>
+
+    <!-- Tracking ID -->
+    <div style="background:linear-gradient(135deg,#DC3545,#FF6B6B);border-radius:14px;padding:20px;margin-bottom:18px;">
+      <div style="color:rgba(255,255,255,0.8);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Your Tracking ID</div>
+      <div id="successRequestId" style="color:white;font-family:'Poppins',sans-serif;font-size:1.8rem;font-weight:900;letter-spacing:2px;"></div>
+      <div style="color:rgba(255,255,255,0.8);font-size:0.72rem;margin-top:6px;">Share this ID with any donor who helps you</div>
+    </div>
+
+    <!-- What next mini -->
+    <div style="background:#F9FAFB;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left;">
+      <div style="font-weight:700;font-size:0.82rem;margin-bottom:8px;">What happens next?</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:0.8rem;color:#4B5563;">
+        <div style="display:flex;gap:7px;"><span>1️⃣</span><span>Blood banks check stock and may fulfill directly</span></div>
+        <div style="display:flex;gap:7px;"><span>2️⃣</span><span>Donors get notified and can respond</span></div>
+        <div style="display:flex;gap:7px;"><span>3️⃣</span><span>Donor confirms using your Tracking ID</span></div>
+        <div style="display:flex;gap:7px;"><span>4️⃣</span><span>You confirm receipt → request marked Complete ✅</span></div>
+      </div>
+    </div>
+
+    <button onclick="copyTrackingId()" id="copyIdBtn"
+      style="background:#F3F4F6;border:none;border-radius:9px;padding:9px 18px;font-weight:600;font-size:0.82rem;cursor:pointer;width:100%;margin-bottom:14px;transition:background 0.15s;">
+      <i class="bi bi-clipboard"></i> Copy Tracking ID
+    </button>
+
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="find-donors.html" class="btn-primary-red btn-sm">🔍 Find Donors</a>
+      <a href="blood-banks.html" class="btn-outline-red btn-sm">🏥 Blood Banks</a>
+      <button class="btn-outline-red btn-sm"
+        onclick="document.getElementById('successModal').classList.remove('show')">
+        Post Another
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, validatePhone, showError, clearError, setLoading, generateRequestId } from '../js/utils.js';
+
+  // ── Detect Location ──
+  window.detectLocation = async function() {
+    const btn      = document.getElementById('detectLocBtn');
+    const btnText  = document.getElementById('detectBtnText');
+    const statusEl = document.getElementById('location-status');
+    const addrEl   = document.getElementById('hospital-address');
+
+    if (!navigator.geolocation) {
+      showToast('Geolocation is not supported by your browser.', 'error');
+      return;
+    }
+
+    // Loading state
+    btn.classList.add('loading');
+    btn.disabled = true;
+    btnText.textContent = 'Detecting...';
+    statusEl.style.display = 'none';
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        document.getElementById('hospital-lat').value = latitude;
+        document.getElementById('hospital-lng').value = longitude;
+
+        try {
+          // Reverse geocode using OpenStreetMap Nominatim (free, no key needed)
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await res.json();
+
+          if (data && data.display_name) {
+            // Build a clean address from components
+            const a   = data.address || {};
+            const parts = [
+              a.road || a.pedestrian || a.neighbourhood,
+              a.suburb || a.village || a.town,
+              a.city || a.county,
+              a.state,
+              a.postcode
+            ].filter(Boolean);
+
+            const cleanAddress = parts.length > 0 ? parts.join(', ') : data.display_name;
+            addrEl.value = cleanAddress;
+
+            // Success state
+            btn.classList.remove('loading');
+            btn.classList.add('success');
+            btn.disabled = false;
+            btnText.textContent = '✓ Location Detected';
+            statusEl.style.display = 'block';
+            statusEl.style.color = '#059669';
+            statusEl.textContent = `📍 Detected: ${a.city || a.county || a.town || ''}, ${a.state || ''}`;
+
+            showToast('📍 Location detected and address filled!', 'success');
+
+            // Reset button after 4s
+            setTimeout(() => {
+              btn.classList.remove('success');
+              btnText.textContent = 'Detect Location';
+            }, 4000);
+
+          } else {
+            throw new Error('No address found');
+          }
+
+        } catch (err) {
+          // Fallback: just use coordinates
+          addrEl.value = `Near coordinates: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          document.getElementById('hospital-lat').value = latitude;
+          document.getElementById('hospital-lng').value = longitude;
+          btn.classList.remove('loading');
+          btn.classList.add('success');
+          btn.disabled = false;
+          btnText.textContent = '✓ Location Detected';
+          showToast('Location detected. Please verify the address.', 'info');
+          setTimeout(() => {
+            btn.classList.remove('success');
+            btnText.textContent = 'Detect Location';
+          }, 4000);
+        }
+      },
+      (error) => {
+        btn.classList.remove('loading');
+        btn.classList.add('error');
+        btn.disabled = false;
+
+        const msgs = {
+          1: 'Location permission denied. Please allow access and try again.',
+          2: 'Location unavailable. Please enter address manually.',
+          3: 'Location request timed out. Please try again.'
+        };
+        const msg = msgs[error.code] || 'Could not detect location.';
+        btnText.textContent = 'Try Again';
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#DC2626';
+        statusEl.textContent = msg;
+        showToast(msg, 'error');
+
+        setTimeout(() => {
+          btn.classList.remove('error');
+          btnText.textContent = 'Detect Location';
+          statusEl.style.display = 'none';
+        }, 4000);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
+  // ── Copy Tracking ID ──
+  window.copyTrackingId = function() {
+    const id  = document.getElementById('successRequestId').textContent;
+    const btn = document.getElementById('copyIdBtn');
+    navigator.clipboard?.writeText(id).then(() => {
+      btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Copied!';
+      setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy Tracking ID'; }, 2000);
+    });
+  };
+
+  // ── Submit Request ──
+  window.submitRequest = async function() {
+    let valid = true;
+    const bloodGroup      = document.getElementById('req-blood-group').value;
+    const units           = parseInt(document.getElementById('req-units').value);
+    const seekerName      = document.getElementById('seeker-name').value.trim();
+    const seekerPhone     = document.getElementById('seeker-phone').value.trim();
+    const hospitalName    = document.getElementById('hospital-name').value.trim();
+    const hospitalAddress = document.getElementById('hospital-address').value.trim();
+    const urgency         = document.querySelector('input[name="urgency"]:checked')?.value;
+    const lat             = parseFloat(document.getElementById('hospital-lat').value) || null;
+    const lng             = parseFloat(document.getElementById('hospital-lng').value) || null;
+
+    ['req-blood-group','req-units','seeker-name','seeker-phone',
+     'hospital-name','hospital-address'].forEach(clearError);
+
+    if (!bloodGroup)                          { showError('req-blood-group',   'Please select blood group');           valid = false; }
+    if (!units || units < 1 || units > 10)    { showError('req-units',         'Enter between 1 and 10 units');       valid = false; }
+    if (!seekerName)                           { showError('seeker-name',       'Please enter your name');             valid = false; }
+    if (!validatePhone(seekerPhone))           { showError('seeker-phone',      'Enter valid 10-digit number');        valid = false; }
+    if (!hospitalName)                         { showError('hospital-name',     'Please enter the hospital name');     valid = false; }
+    if (!hospitalAddress)                      { showError('hospital-address',  'Please enter the hospital address');  valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('submitRequestBtn');
+    setLoading(btn, true, 'Posting...');
+
+    const requestId   = generateRequestId();
+    const requestData = {
+      request_id:           requestId,
+      seeker_name:          seekerName,
+      seeker_phone:         '+91' + seekerPhone,
+      blood_group_needed:   bloodGroup,
+      units_needed:         units,
+      hospital_name:        hospitalName,
+      hospital_address:     hospitalAddress,
+      hospital_latitude:    lat,
+      hospital_longitude:   lng,
+      urgency_level:        urgency,
+      status:               'ACTIVE',
+      notes:                document.getElementById('req-notes').value.trim() || null,
+      notified_blood_banks: [],
+      contacted_donors:     [],
+      fulfilled_by:         null,
+      fulfilled_at:         null,
+      fulfillment_type:     null,
+      verified_by_blood_bank: false,
+      created_at:           serverTimestamp(),
+      updated_at:           serverTimestamp()
+    };
+
+    try {
+      await addDoc(collection(db, 'requests'), requestData);
+      document.getElementById('successRequestId').textContent = requestId;
+      document.getElementById('successModal').classList.add('show');
+      document.getElementById('requestForm').reset();
+      document.getElementById('hospital-lat').value = '';
+      document.getElementById('hospital-lng').value = '';
+      document.getElementById('location-status').style.display = 'none';
+      setLoading(btn, false);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to post request. Please try again.', 'error');
+      setLoading(btn, false);
+    }
+  };
+
+  // Close modal on overlay click
+  document.getElementById('successModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('successModal'))
+      document.getElementById('successModal').classList.remove('show');
+  });
+</script>
+<script src="../js/app.js"></script>
+</body>
+</html>

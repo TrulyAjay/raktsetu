@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Register as a blood donor on RaktSetu and help save lives.">
+  <title>Register as Donor – RaktSetu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .register-layout { display:grid; grid-template-columns:1fr 1.6fr; height:calc(100vh - 64px); overflow:hidden; }
+    .register-sidebar { background:linear-gradient(160deg,#DC3545 0%,#8B0000 100%); padding:36px 30px; color:white; height:100%; display:flex; flex-direction:column; justify-content:center; overflow:hidden; }
+    .register-sidebar-content { position:relative; }
+    .sidebar-title { font-size:1.75rem; font-weight:900; margin-bottom:12px; line-height:1.2; }
+    .sidebar-subtitle { font-size:0.88rem; opacity:0.85; margin-bottom:24px; line-height:1.6; }
+    .benefit-item { display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+    .benefit-icon { width:34px; height:34px; background:rgba(255,255,255,0.15); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:0.95rem; flex-shrink:0; }
+    .benefit-text { font-size:0.84rem; opacity:0.9; line-height:1.5; }
+    .benefit-text strong { display:block; font-weight:700; font-size:0.88rem; margin-bottom:1px; }
+    .big-drop { font-size:7rem; position:absolute; bottom:-20px; right:-20px; opacity:0.08; }
+
+    /* Right side — vertically centered, no scroll */
+    .register-form-area {
+      background: #F8FAFC;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 36px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .form-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px 28px;
+      box-shadow: 0 3px 18px rgba(0,0,0,0.07);
+      border: 1px solid #E5E7EB;
+      width: 100%;
+      max-width: 640px;
+      margin: auto;
+    }
+    .form-title { font-size:1.25rem; font-weight:800; margin-bottom:2px; }
+    .form-subtitle { color:#4B5563; margin-bottom:14px; font-size:0.82rem; }
+
+    /* Tighter form groups for Step 1 */
+    #step-1 .form-group { margin-bottom: 12px; }
+    #step-1 .row.g-3 { --bs-gutter-y: 0.5rem; --bs-gutter-x: 0.65rem; }
+
+    /* Step progress */
+    .step-progress { display:flex; gap:0; margin-bottom:16px; }
+    .progress-step { flex:1; padding-bottom:7px; border-bottom:3px solid #E5E7EB; font-size:0.7rem; color:#9CA3AF; font-weight:600; transition:all 0.22s; }
+    .progress-step.active { border-bottom-color:#DC3545; color:#DC3545; }
+    .progress-step.done   { border-bottom-color:#00B894; color:#00B894; }
+
+    /* Blood group selector — compact */
+    .blood-group-selector { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+    .blood-group-option { display:none; }
+    .blood-group-label { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 4px; border:1.5px solid #E5E7EB; border-radius:8px; cursor:pointer; transition:all 0.18s; font-family:'Poppins',sans-serif; font-weight:800; font-size:0.88rem; color:#636E72; gap:1px; }
+    .blood-group-label:hover { border-color:#DC3545; color:#DC3545; background:#FFF5F5; }
+    .blood-group-option:checked + .blood-group-label { border-color:#DC3545; background:#DC3545; color:white; box-shadow:0 3px 10px rgba(220,53,69,0.28); }
+    .blood-group-label span { font-size:0.52rem; font-weight:500; opacity:0.72; }
+
+    /* Step 3 form groups */
+    #step-3 .form-group { margin-bottom: 10px; }
+    #step-3 .row.g-3 { --bs-gutter-y: 0.45rem; --bs-gutter-x: 0.65rem; }
+
+    .terms-text { font-size:0.78rem; color:#636E72; line-height:1.5; }
+    .terms-text a { color:#DC3545; font-weight:600; }
+
+    /* OTP Step Styles */
+    .otp-wrapper { text-align:center; padding:4px 0; }
+    .otp-phone-display {
+      background:#FFF5F5; border:1.5px solid #FECACA;
+      border-radius:12px; padding:14px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:24px;
+    }
+    .otp-phone-num { font-family:'Poppins',sans-serif; font-weight:800; font-size:1.05rem; color:#DC3545; }
+    .otp-change-btn { font-size:0.8rem; color:#4B5563; cursor:pointer; font-weight:600; border:none; background:none; text-decoration:underline; }
+    .otp-change-btn:hover { color:#DC3545; }
+
+    .otp-inputs { display:flex; gap:10px; justify-content:center; margin:24px 0; }
+    .otp-digit {
+      width:52px; height:58px;
+      border:2px solid #E5E7EB;
+      border-radius:12px;
+      text-align:center;
+      font-family:'Poppins',sans-serif;
+      font-size:1.6rem;
+      font-weight:800;
+      color:#1E2328;
+      outline:none;
+      transition:border-color 0.18s, box-shadow 0.18s;
+      caret-color:transparent;
+    }
+    .otp-digit:focus { border-color:#DC3545; box-shadow:0 0 0 3px rgba(220,53,69,0.12); }
+    .otp-digit.filled { border-color:#DC3545; background:#FFF5F5; }
+    .otp-digit.error  { border-color:#DC2626; background:#FEF2F2; animation:shake 0.4s ease; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)}
+    }
+
+    .otp-timer { font-size:0.84rem; color:#4B5563; margin-bottom:8px; }
+    .otp-timer span { font-weight:700; color:#DC3545; }
+    .otp-resend-btn { font-size:0.84rem; font-weight:600; color:#DC3545; cursor:pointer; border:none; background:none; text-decoration:underline; display:none; }
+    .otp-resend-btn:hover { opacity:0.8; }
+
+    .otp-verified-banner {
+      background:linear-gradient(135deg,#00B894,#00cfa1);
+      color:white; border-radius:12px; padding:14px 18px;
+      display:flex; align-items:center; gap:10px;
+      font-weight:700; font-size:0.9rem;
+      margin-bottom:16px;
+    }
+
+    /* recaptcha container — invisible but must exist in DOM */
+    #recaptcha-container { display:none; }
+
+    @media(max-width:992px) {
+      .register-layout { grid-template-columns:1fr; height:auto; overflow:visible; }
+      .register-sidebar { height:auto; padding:24px 20px; }
+      .register-form-area { height:auto; padding:20px 16px; align-items:flex-start; overflow-y:auto; }
+      .form-card { padding:20px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<link rel="stylesheet" href="../css/navbar.css">
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../index.html">🩸 Rakt<span>Setu</span></a>
+    <ul class="rks-nav">
+
+      <li class="nav-item">
+        <a class="nav-top-link" href="../index.html">Home</a>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Seeker <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="request-blood.html">
+            <div class="dropdown-icon">🆘</div>
+            <div class="dropdown-text"><span class="dropdown-label">Request Blood</span><span class="dropdown-desc">Post an urgent blood request</span></div>
+          </a>
+          <a class="dropdown-link" href="find-donors.html">
+            <div class="dropdown-icon">🔍</div>
+            <div class="dropdown-text"><span class="dropdown-label">Find Donors</span><span class="dropdown-desc">Search verified donors nearby</span></div>
+          </a>
+          <a class="dropdown-link" href="blood-banks.html">
+            <div class="dropdown-icon">🏥</div>
+            <div class="dropdown-text"><span class="dropdown-label">Blood Banks</span><span class="dropdown-desc">Check live inventory near you</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="seeker-dashboard.html">
+            <div class="dropdown-icon">📋</div>
+            <div class="dropdown-text"><span class="dropdown-label">Track My Request</span><span class="dropdown-desc">View your active requests</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Donor <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link active" href="donor-register.html">
+            <div class="dropdown-icon">❤️</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register</span><span class="dropdown-desc">Join as a verified donor</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-dashboard.html">
+            <div class="dropdown-icon">📊</div>
+            <div class="dropdown-text"><span class="dropdown-label">My Dashboard</span><span class="dropdown-desc">Track donations & availability</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-confirm.html">
+            <div class="dropdown-icon">✅</div>
+            <div class="dropdown-text"><span class="dropdown-label">Confirm Donation</span><span class="dropdown-desc">Verify using Tracking ID</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item nav-item-last">
+        <button class="nav-top-link" aria-haspopup="true">
+          Blood Bank <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown nav-dropdown-right">
+          <a class="dropdown-link" href="../bloodbank-portal/login.html">
+            <div class="dropdown-icon">🔐</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Login</span><span class="dropdown-desc">Sign in to your blood bank</span></div>
+          </a>
+          <a class="dropdown-link" href="../bloodbank-portal/bloodbank-register.html">
+            <div class="dropdown-icon">🏦</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register Blood Bank</span><span class="dropdown-desc">Join the RaktSetu network</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="../bloodbank-portal/dashboard.html">
+            <div class="dropdown-icon">📈</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Dashboard</span><span class="dropdown-desc">Manage inventory & requests</span></div>
+          </a>
+        </div>
+      </li>
+
+    </ul>
+    <button class="navbar-toggler" id="mobileToggler" onclick="toggleMobileNav()" aria-label="Menu">
+      <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
+    </button>
+  </div>
+</nav>
+
+<div class="navbar-mobile" id="mobileNav">
+  <a class="mobile-top-link" href="../index.html">🏠 Home</a>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Seeker <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="request-blood.html"><span class="mobile-link-icon">🆘</span> Request Blood</a>
+      <a class="mobile-link" href="find-donors.html"><span class="mobile-link-icon">🔍</span> Find Donors</a>
+      <a class="mobile-link" href="blood-banks.html"><span class="mobile-link-icon">🏥</span> Blood Banks</a>
+      <a class="mobile-link" href="seeker-dashboard.html"><span class="mobile-link-icon">📋</span> Track My Request</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Donor <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link active" href="donor-register.html"><span class="mobile-link-icon">❤️</span> Register</a>
+      <a class="mobile-link" href="donor-dashboard.html"><span class="mobile-link-icon">📊</span> My Dashboard</a>
+      <a class="mobile-link" href="donor-confirm.html"><span class="mobile-link-icon">✅</span> Confirm Donation</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Blood Bank <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="../bloodbank-portal/login.html"><span class="mobile-link-icon">🔐</span> Portal Login</a>
+      <a class="mobile-link" href="../bloodbank-portal/bloodbank-register.html"><span class="mobile-link-icon">🏦</span> Register Blood Bank</a>
+      <a class="mobile-link" href="../bloodbank-portal/dashboard.html"><span class="mobile-link-icon">📈</span> Portal Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    window.addEventListener('scroll', function() {
+      var nb = document.getElementById('mainNavbar');
+      if (nb) nb.classList.toggle('scrolled', window.scrollY > 10);
+    }, {passive: true});
+    window.toggleMobileNav = function() {
+      document.getElementById('mobileNav').classList.toggle('open');
+      document.getElementById('mobileToggler').classList.toggle('open');
+    };
+    window.toggleMobileSection = function(btn) {
+      var links = btn.nextElementSibling;
+      var isOpen = links.classList.contains('open');
+      document.querySelectorAll('.mobile-links').forEach(function(l) { l.classList.remove('open'); });
+      document.querySelectorAll('.mobile-section-btn').forEach(function(b) { b.classList.remove('open'); });
+      if (!isOpen) { links.classList.add('open'); btn.classList.add('open'); }
+    };
+    document.querySelectorAll('.mobile-link, .mobile-top-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobileNav').classList.remove('open');
+        document.getElementById('mobileToggler').classList.remove('open');
+      });
+    });
+  })();
+</script>
+
+<!-- Invisible reCAPTCHA anchor — Firebase needs this in DOM -->
+<div id="recaptcha-container"></div>
+
+<div class="register-layout">
+  <!-- Sidebar -->
+  <div class="register-sidebar">
+    <div class="register-sidebar-content">
+      <h1 class="sidebar-title">Become a Life Saver Today</h1>
+      <p class="sidebar-subtitle">Register once. Your verified phone number ensures only real donors are on our network — keeping seekers safe.</p>
+      <div class="benefit-item">
+        <div class="benefit-icon">📱</div>
+        <div class="benefit-text"><strong>Phone Verified</strong>Only verified donors appear in search results.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🔔</div>
+        <div class="benefit-text"><strong>Instant Notifications</strong>Get alerted when someone near you urgently needs your blood group.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">📜</div>
+        <div class="benefit-text"><strong>Verified Certificates</strong>Every donation gets a verified digital certificate.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🏆</div>
+        <div class="benefit-text"><strong>Donor Leaderboard</strong>Earn badges and recognition for your life-saving contributions.</div>
+      </div>
+      <div class="big-drop">🩸</div>
+    </div>
+  </div>
+
+  <!-- Form Area -->
+  <div class="register-form-area">
+    <div class="form-card">
+      <h2 class="form-title">Donor Registration</h2>
+      <p class="form-subtitle">Your phone number will be verified via OTP</p>
+
+      <!-- Progress bar — 4 steps now -->
+      <div class="step-progress">
+        <div class="progress-step active" id="step-1-indicator">1. Personal Info</div>
+        <div class="progress-step"        id="step-2-indicator">2. Verify Phone</div>
+        <div class="progress-step"        id="step-3-indicator">3. Blood & Location</div>
+        <div class="progress-step"        id="step-4-indicator">4. Done ✓</div>
+      </div>
+
+      <form id="donorForm" novalidate>
+
+        <!-- ── STEP 1: Personal Info ── -->
+        <div id="step-1">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Full Name <span class="required">*</span></label>
+                <input type="text" id="donor-name" class="form-control-rs" placeholder="e.g. Rahul Sharma" maxlength="60">
+                <div class="form-error" id="donor-name-error">Please enter your full name</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Phone Number <span class="required">*</span></label>
+                <div style="position:relative;">
+                  <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#636E72;font-weight:600;font-size:0.9rem;pointer-events:none;">+91</span>
+                  <input type="tel" id="donor-phone" class="form-control-rs" style="padding-left:48px;" placeholder="9876543210" maxlength="10" inputmode="numeric">
+                </div>
+                <div class="form-error" id="donor-phone-error">Enter valid 10-digit mobile number</div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label">Email Address <span style="color:#9CA3AF;font-weight:400;font-size:0.77rem;">(Optional)</span></label>
+                <input type="email" id="donor-email" class="form-control-rs" placeholder="rahul@example.com">
+                <div class="form-error" id="donor-email-error">Enter a valid email address</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Age <span class="required">*</span></label>
+                <input type="number" id="donor-age" class="form-control-rs" placeholder="25" min="18" max="65">
+                <div class="form-error" id="donor-age-error">Age must be between 18 and 65</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Gender <span class="required">*</span></label>
+                <select id="donor-gender" class="form-control-rs">
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+                <div class="form-error" id="donor-gender-error">Please select your gender</div>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-primary-red mt-3 w-100" onclick="goToOTP()" style="justify-content:center;">
+            Continue &amp; Send OTP <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- ── STEP 2: OTP Verification ── -->
+        <div id="step-2" style="display:none;">
+          <div class="otp-wrapper">
+            <div style="font-size:3rem;margin-bottom:12px;">📱</div>
+            <h4 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:1.15rem;margin-bottom:8px;">Verify Your Phone Number</h4>
+            <p style="font-size:0.86rem;color:#4B5563;margin-bottom:20px;line-height:1.6;">We've sent a 6-digit OTP to your mobile number. Enter it below to verify.</p>
+
+            <div class="otp-phone-display">
+              <div>
+                <div style="font-size:0.72rem;color:#4B5563;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px;">OTP sent to</div>
+                <div class="otp-phone-num" id="otp-phone-display">+91 XXXXX XXXXX</div>
+              </div>
+              <button type="button" class="otp-change-btn" onclick="backToStep1()">Change Number</button>
+            </div>
+
+            <!-- 6 individual digit boxes -->
+            <div class="otp-inputs" id="otp-inputs">
+              <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp-0">
+              <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp-1">
+              <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp-2">
+              <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp-3">
+              <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp-4">
+              <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp-5">
+            </div>
+
+            <div class="otp-timer" id="otp-timer">OTP expires in <span id="otp-countdown">60</span>s</div>
+            <button type="button" class="otp-resend-btn" id="otp-resend-btn" onclick="resendOTP()">Resend OTP</button>
+
+            <div id="otp-error-msg" style="display:none;background:#FEF2F2;border-radius:10px;padding:10px 14px;color:#DC2626;font-size:0.84rem;font-weight:600;margin-top:12px;"></div>
+
+            <button type="button" class="btn-primary-red w-100 mt-4" id="verifyOtpBtn" onclick="verifyOTP()" style="justify-content:center;">
+              <i class="bi bi-shield-check"></i> Verify OTP
+            </button>
+            <button type="button" class="btn-outline-red w-100 mt-2" onclick="backToStep1()" style="justify-content:center;">
+              <i class="bi bi-arrow-left"></i> Back
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 3: Blood Group & Location ── -->
+        <div id="step-3" style="display:none;">
+          <!-- Verified banner -->
+          <div class="otp-verified-banner">
+            <i class="bi bi-patch-check-fill" style="font-size:1.3rem;flex-shrink:0;"></i>
+            <span>Phone number verified successfully!</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Blood Group <span class="required">*</span></label>
+            <div class="blood-group-selector">
+              <input type="radio" name="blood_group" id="bg-aplus"  value="A+"  class="blood-group-option">
+              <label for="bg-aplus"  class="blood-group-label">A+  <span>A Positive</span></label>
+              <input type="radio" name="blood_group" id="bg-aminus" value="A-"  class="blood-group-option">
+              <label for="bg-aminus" class="blood-group-label">A-  <span>A Negative</span></label>
+              <input type="radio" name="blood_group" id="bg-bplus"  value="B+"  class="blood-group-option">
+              <label for="bg-bplus"  class="blood-group-label">B+  <span>B Positive</span></label>
+              <input type="radio" name="blood_group" id="bg-bminus" value="B-"  class="blood-group-option">
+              <label for="bg-bminus" class="blood-group-label">B-  <span>B Negative</span></label>
+              <input type="radio" name="blood_group" id="bg-oplus"  value="O+"  class="blood-group-option">
+              <label for="bg-oplus"  class="blood-group-label">O+  <span>O Positive</span></label>
+              <input type="radio" name="blood_group" id="bg-ominus" value="O-"  class="blood-group-option">
+              <label for="bg-ominus" class="blood-group-label">O-  <span>Universal</span></label>
+              <input type="radio" name="blood_group" id="bg-abplus" value="AB+" class="blood-group-option">
+              <label for="bg-abplus" class="blood-group-label">AB+ <span>AB Positive</span></label>
+              <input type="radio" name="blood_group" id="bg-abminus" value="AB-" class="blood-group-option">
+              <label for="bg-abminus" class="blood-group-label">AB- <span>AB Negative</span></label>
+            </div>
+            <div class="form-error" id="blood-group-error">Please select your blood group</div>
+          </div>
+
+          <div class="section-divider">Location Details</div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">City <span class="required">*</span></label>
+                <input type="text" id="donor-city" class="form-control-rs" placeholder="e.g. Indore">
+                <div class="form-error" id="donor-city-error">Please enter your city</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">State <span class="required">*</span></label>
+                <select id="donor-state" class="form-control-rs">
+                  <option value="">Select state</option>
+                  <option>Madhya Pradesh</option><option>Maharashtra</option><option>Delhi</option>
+                  <option>Karnataka</option><option>Tamil Nadu</option><option>Gujarat</option>
+                  <option>Rajasthan</option><option>Uttar Pradesh</option><option>West Bengal</option>
+                  <option>Telangana</option><option>Kerala</option><option>Punjab</option>
+                  <option>Haryana</option><option>Bihar</option><option>Odisha</option>
+                  <option>Jharkhand</option><option>Chhattisgarh</option><option>Assam</option>
+                  <option>Other</option>
+                </select>
+                <div class="form-error" id="donor-state-error">Please select your state</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Pincode <span class="required">*</span></label>
+                <input type="text" id="donor-pincode" class="form-control-rs" placeholder="452001" maxlength="6" inputmode="numeric">
+                <div class="form-error" id="donor-pincode-error">Enter valid 6-digit pincode</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Last Donation Date <span style="color:#9CA3AF;font-weight:400;font-size:0.77rem;">(If applicable)</span></label>
+                <input type="date" id="last-donation-date" class="form-control-rs">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mt-3">
+            <div style="display:flex;align-items:flex-start;gap:12px;background:#F0FFF4;border:1px solid #BBF7D0;padding:14px;border-radius:12px;">
+              <input type="checkbox" id="consent-check" style="margin-top:3px;accent-color:#DC3545;width:16px;height:16px;flex-shrink:0;">
+              <label for="consent-check" class="terms-text">
+                I confirm I am at least 18 years old, weigh over 50kg, and am in good health. I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. My contact info may be shared with seekers in emergencies.
+              </label>
+            </div>
+            <div class="form-error" id="consent-error">Please accept the terms to continue</div>
+          </div>
+
+          <div class="d-flex gap-3 mt-3">
+            <button type="button" id="submitBtn" class="btn-primary-red flex-grow-1" onclick="submitRegistration()" style="justify-content:center;">
+              <i class="bi bi-heart-fill"></i> Complete Registration
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 4: Success ── -->
+        <div id="step-4" style="display:none;text-align:center;padding:20px 0;">
+          <div style="font-size:5rem;margin-bottom:16px;">🎉</div>
+          <h3 style="font-size:1.5rem;font-weight:800;margin-bottom:10px;">You're a Verified RaktSetu Donor!</h3>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:#D1FAE5;color:#059669;padding:6px 16px;border-radius:20px;font-size:0.84rem;font-weight:700;margin-bottom:16px;">
+            <i class="bi bi-patch-check-fill"></i> Phone Verified
+          </div>
+          <p style="color:#4B5563;margin-bottom:8px;">Your donor ID: <strong id="donorIdDisplay" style="color:#DC3545;font-family:'Poppins',sans-serif;"></strong></p>
+          <p style="color:#4B5563;margin-bottom:28px;font-size:0.88rem;">You'll receive notifications when someone near you needs your blood group.</p>
+          <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="donor-dashboard.html" class="btn-primary-red">View My Dashboard</a>
+            <a href="../index.html" class="btn-outline-red">Back to Home</a>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { auth, db } from '../js/firebase-init.js';
+  import {
+    RecaptchaVerifier,
+    signInWithPhoneNumber
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import {
+    showToast, validatePhone, validatePincode,
+    validateEmail, showError, clearError, setLoading
+  } from '../js/utils.js';
+
+  // ── State ──
+  let confirmationResult = null;
+  let otpTimer          = null;
+  let recaptchaVerifier  = null;
+  let phoneVerified      = false;
+  let verifiedUID        = null;
+
+  // ── Init invisible reCAPTCHA (only once) ──
+  function initRecaptcha() {
+    // Always destroy and re-create to avoid stale state on deployed sites
+    if (recaptchaVerifier) {
+      try { recaptchaVerifier.clear(); } catch(e) {}
+      recaptchaVerifier = null;
+    }
+    recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+      callback: () => {},
+      'expired-callback': () => {
+        try { recaptchaVerifier.clear(); } catch(e) {}
+        recaptchaVerifier = null;
+      }
+    });
+  }
+
+  // ── OTP digit box behaviour ──
+  function initOtpInputs() {
+    const inputs = document.querySelectorAll('.otp-digit');
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('input', e => {
+        // Only allow digits
+        inp.value = inp.value.replace(/\D/g, '').slice(-1);
+        inp.classList.toggle('filled', inp.value !== '');
+        if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+        // Auto verify if all 6 filled
+        if ([...inputs].every(d => d.value)) verifyOTP();
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) {
+          inputs[i - 1].focus();
+          inputs[i - 1].value = '';
+          inputs[i - 1].classList.remove('filled');
+        }
+      });
+      inp.addEventListener('paste', e => {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        paste.split('').forEach((ch, idx) => {
+          if (inputs[idx]) { inputs[idx].value = ch; inputs[idx].classList.add('filled'); }
+        });
+        if (paste.length === 6) { inputs[5].focus(); verifyOTP(); }
+      });
+    });
+  }
+  initOtpInputs();
+
+  // ── OTP countdown timer ──
+  function startTimer(seconds = 60) {
+    clearInterval(otpTimer);
+    let remaining = seconds;
+    const countdownEl = document.getElementById('otp-countdown');
+    const timerEl     = document.getElementById('otp-timer');
+    const resendBtn   = document.getElementById('otp-resend-btn');
+    timerEl.style.display  = 'block';
+    resendBtn.style.display = 'none';
+    countdownEl.textContent = remaining;
+    otpTimer = setInterval(() => {
+      remaining--;
+      countdownEl.textContent = remaining;
+      if (remaining <= 0) {
+        clearInterval(otpTimer);
+        timerEl.style.display  = 'none';
+        resendBtn.style.display = 'block';
+      }
+    }, 1000);
+  }
+
+  function clearOtpInputs() {
+    document.querySelectorAll('.otp-digit').forEach(d => {
+      d.value = ''; d.classList.remove('filled', 'error');
+    });
+  }
+
+  function setOtpError(msg) {
+    document.querySelectorAll('.otp-digit').forEach(d => d.classList.add('error'));
+    const errEl = document.getElementById('otp-error-msg');
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    setTimeout(() => {
+      document.querySelectorAll('.otp-digit').forEach(d => d.classList.remove('error'));
+      clearOtpInputs();
+      document.getElementById('otp-0').focus();
+    }, 800);
+  }
+
+  // ── STEP 1 → validate → send OTP → show STEP 2 ──
+  window.goToOTP = async function() {
+    // Validate Step 1 fields
+    let valid = true;
+    const name   = document.getElementById('donor-name').value.trim();
+    const phone  = document.getElementById('donor-phone').value.trim();
+    const email  = document.getElementById('donor-email').value.trim();
+    const age    = parseInt(document.getElementById('donor-age').value);
+    const gender = document.getElementById('donor-gender').value;
+
+    ['donor-name','donor-phone','donor-email','donor-age','donor-gender'].forEach(clearError);
+
+    if (!name || name.length < 2)           { showError('donor-name',   'Please enter your full name');         valid = false; }
+    if (!validatePhone(phone))               { showError('donor-phone',  'Enter valid 10-digit mobile number'); valid = false; }
+    if (email && !validateEmail(email))      { showError('donor-email',  'Enter a valid email address');        valid = false; }
+    if (!age || age < 18 || age > 65)        { showError('donor-age',    'Age must be between 18 and 65');      valid = false; }
+    if (!gender)                             { showError('donor-gender', 'Please select your gender');          valid = false; }
+    if (!valid) return;
+
+    // Show OTP step, update progress
+    const btn = document.querySelector('#step-1 button');
+    setLoading(btn, true, 'Sending OTP...');
+
+    const fullPhone = '+91' + phone;
+    document.getElementById('otp-phone-display').textContent =
+      '+91 ' + phone.slice(0,5) + ' ' + phone.slice(5);
+
+    try {
+      initRecaptcha();
+      confirmationResult = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifier);
+      // Transition to OTP step
+      document.getElementById('step-1').style.display = 'none';
+      document.getElementById('step-2').style.display = 'block';
+      document.getElementById('step-1-indicator').className = 'progress-step done';
+      document.getElementById('step-2-indicator').className = 'progress-step active';
+      clearOtpInputs();
+      document.getElementById('otp-error-msg').style.display = 'none';
+      startTimer(60);
+      setTimeout(() => document.getElementById('otp-0').focus(), 100);
+      showToast('OTP sent to +91 ' + phone.slice(0,5) + '...', 'success');
+    } catch (err) {
+      console.error('Send OTP error — code:', err.code, '| message:', err.message);
+      const msgs = {
+        'auth/invalid-phone-number':      'Invalid phone number. Check and try again.',
+        'auth/too-many-requests':         'Too many OTP requests. Try again after some time.',
+        'auth/quota-exceeded':            'OTP quota exceeded. Try again later.',
+        'auth/captcha-check-failed':      'reCAPTCHA failed. Refresh page and try again.',
+        'auth/network-request-failed':    'Network error. Check your connection.',
+        'auth/operation-not-allowed':     'Phone Auth is not enabled. Enable it in Firebase Console → Authentication → Sign-in method → Phone.',
+        'auth/invalid-app-credential':    'reCAPTCHA error — add your deployed domain to Firebase → Authentication → Settings → Authorised Domains.',
+        'auth/app-not-authorized':        'This domain is not authorised. Add it in Firebase → Authentication → Settings → Authorised Domains.',
+        'auth/internal-error':            'Firebase internal error. Check that Phone Auth is enabled in Firebase Console.',
+        'auth/missing-phone-number':      'Phone number is missing.',
+        'auth/user-disabled':             'This account has been disabled.',
+      };
+      const userMsg = msgs[err.code] || `Error (${err.code || 'unknown'}): ${err.message}`;
+      showToast(userMsg, 'error');
+      // Reset recaptcha for next attempt
+      try { if (recaptchaVerifier) recaptchaVerifier.clear(); } catch(e) {}
+      recaptchaVerifier = null;
+    }
+    setLoading(btn, false);
+  };
+
+  // ── Resend OTP ──
+  window.resendOTP = async function() {
+    const phone = document.getElementById('donor-phone').value.trim();
+    const resendBtn = document.getElementById('otp-resend-btn');
+    resendBtn.disabled = true;
+    resendBtn.textContent = 'Sending...';
+    document.getElementById('otp-error-msg').style.display = 'none';
+    clearOtpInputs();
+    try {
+      recaptchaVerifier = null; // force fresh recaptcha
+      initRecaptcha();
+      confirmationResult = await signInWithPhoneNumber(auth, '+91' + phone, recaptchaVerifier);
+      startTimer(60);
+      showToast('OTP resent!', 'success');
+    } catch (err) {
+      showToast('Failed to resend OTP. Try again.', 'error');
+      resendBtn.disabled = false;
+      resendBtn.textContent = 'Resend OTP';
+    }
+  };
+
+  // ── Verify OTP ──
+  window.verifyOTP = async function() {
+    const digits = [...document.querySelectorAll('.otp-digit')].map(d => d.value);
+    const otp    = digits.join('');
+
+    if (otp.length < 6) {
+      showToast('Please enter all 6 digits', 'warning');
+      return;
+    }
+    if (!confirmationResult) {
+      showToast('Session expired. Please go back and resend OTP.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('verifyOtpBtn');
+    setLoading(btn, true, 'Verifying...');
+    document.getElementById('otp-error-msg').style.display = 'none';
+
+    try {
+      const result = await confirmationResult.confirm(otp);
+      verifiedUID   = result.user.uid;
+      phoneVerified = true;
+      clearInterval(otpTimer);
+
+      // Transition to Step 3
+      document.getElementById('step-2').style.display = 'none';
+      document.getElementById('step-3').style.display = 'block';
+      document.getElementById('step-2-indicator').className = 'progress-step done';
+      document.getElementById('step-3-indicator').className = 'progress-step active';
+      showToast('✅ Phone verified! Fill in your blood details.', 'success');
+    } catch (err) {
+      console.error('Verify OTP error:', err);
+      const msgs = {
+        'auth/invalid-verification-code': 'Incorrect OTP. Please check and try again.',
+        'auth/code-expired':              'OTP expired. Please resend.',
+        'auth/session-expired':           'Session expired. Please resend OTP.',
+      };
+      setOtpError(msgs[err.code] || 'Invalid OTP. Please try again.');
+      setLoading(btn, false);
+    }
+    setLoading(btn, false);
+  };
+
+  // ── Back to Step 1 ──
+  window.backToStep1 = function() {
+    clearInterval(otpTimer);
+    confirmationResult = null;
+    clearOtpInputs();
+    document.getElementById('step-2').style.display = 'none';
+    document.getElementById('step-1').style.display = 'block';
+    document.getElementById('step-1-indicator').className = 'progress-step active';
+    document.getElementById('step-2-indicator').className = 'progress-step';
+    document.getElementById('otp-error-msg').style.display = 'none';
+  };
+
+  // ── Final Submit ──
+  window.submitRegistration = async function() {
+    let valid = true;
+    const bloodGroup = document.querySelector('input[name="blood_group"]:checked')?.value;
+    const city       = document.getElementById('donor-city').value.trim();
+    const state      = document.getElementById('donor-state').value;
+    const pincode    = document.getElementById('donor-pincode').value.trim();
+    const consent    = document.getElementById('consent-check').checked;
+
+    ['blood-group','donor-city','donor-state','donor-pincode','consent'].forEach(clearError);
+
+    if (!bloodGroup)                 { showError('blood-group',   'Please select your blood group');   valid = false; }
+    if (!city)                       { showError('donor-city',    'Please enter your city');           valid = false; }
+    if (!state)                      { showError('donor-state',   'Please select your state');        valid = false; }
+    if (!validatePincode(pincode))   { showError('donor-pincode', 'Enter valid 6-digit pincode');     valid = false; }
+    if (!consent)                    { showError('consent',       'Please accept the terms');         valid = false; }
+    if (!valid) return;
+
+    if (!phoneVerified) {
+      showToast('Phone not verified. Please complete OTP verification.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    setLoading(btn, true, 'Registering...');
+
+    const donorData = {
+      name:               document.getElementById('donor-name').value.trim(),
+      phone:              '+91' + document.getElementById('donor-phone').value.trim(),
+      email:              document.getElementById('donor-email').value.trim() || null,
+      age:                parseInt(document.getElementById('donor-age').value),
+      gender:             document.getElementById('donor-gender').value,
+      blood_group:        bloodGroup,
+      city, state, pincode,
+      phone_verified:     true,
+      firebase_uid:       verifiedUID || null,
+      available:          true,
+      last_donation_date: document.getElementById('last-donation-date').value || null,
+      total_donations:    0,
+      verified_donations: [],
+      rating:             0,
+      latitude:           null,
+      longitude:          null,
+      fcm_token:          null,
+      created_at:         serverTimestamp(),
+      updated_at:         serverTimestamp()
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'donors'), donorData);
+      localStorage.setItem('raktsetu_donor_id', docRef.id);
+      document.getElementById('donorIdDisplay').textContent = docRef.id;
+      // Show success
+      document.getElementById('step-3').style.display = 'none';
+      document.getElementById('step-4').style.display = 'block';
+      document.getElementById('step-3-indicator').className = 'progress-step done';
+      document.getElementById('step-4-indicator').className = 'progress-step done';
+      showToast('Welcome to RaktSetu! Registration complete 🎉', 'success');
+    } catch (err) {
+      console.error('Registration error:', err);
+      showToast('Registration failed. Check your connection and try again.', 'error');
+      setLoading(btn, false);
+    }
+  };
+</script>
+<script src="../js/app.js"></script>
+</body>
+</html>

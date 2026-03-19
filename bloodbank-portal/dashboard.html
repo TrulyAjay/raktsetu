@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Blood Bank Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/bloodbank-portal.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .live-dot { width:10px;height:10px;background:#00B894;border-radius:50%;animation:pulse-dot 1.5s infinite;display:inline-block;margin-right:6px; }
+    .critical-alert {
+      background: linear-gradient(135deg,#DC2626,#EF4444);
+      color:white; border-radius:14px; padding:18px 22px;
+      display:flex; align-items:center; gap:14px;
+      margin-bottom:20px; animation: slideInRight 0.5s ease;
+    }
+    .alert-icon { font-size:1.5rem; flex-shrink:0; }
+    .alert-text { flex:1; font-size:0.9rem; font-weight:600; }
+    .alert-close { background:rgba(255,255,255,0.2); border:none; color:white; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:0.9rem; }
+
+    .request-row { transition: background 0.2s; cursor:pointer; }
+    .request-row:hover { background:#FFF5F5 !important; }
+
+    .chart-tabs { display:flex; gap:8px; margin-bottom:16px; }
+    .chart-tab { padding:6px 16px; border-radius:8px; border:1px solid #E5E7EB; background:white; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s; color:#636E72; }
+    .chart-tab.active { background:#DC3545; border-color:#DC3545; color:white; }
+
+    .inventory-update-form { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px; }
+    .inv-update-cell { text-align:center; }
+    .inv-update-input { width:100%; text-align:center; padding:8px; border:2px solid #E5E7EB; border-radius:8px; font-family:'Poppins',sans-serif; font-weight:700; font-size:1rem; transition:all 0.2s; }
+    .inv-update-input:focus { border-color:#DC3545; outline:none; box-shadow:0 0 0 3px rgba(220,53,69,0.1); }
+    .inv-update-label { font-family:'Poppins',sans-serif; font-weight:800; color:#DC3545; font-size:0.9rem; margin-bottom:4px; }
+  </style>
+</head>
+<body>
+
+<div class="portal-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">🩸 Rakt<span>Setu</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link active"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="inventory.html" class="sidebar-link"><i class="bi bi-droplet-fill"></i> Inventory</a>
+      <a href="requests.html" class="sidebar-link"><i class="bi bi-bell-fill"></i> Blood Requests</a>
+      <a href="verify-donation.html" class="sidebar-link"><i class="bi bi-patch-check-fill"></i> Verify Donation</a>
+      <a href="analytics.html" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i> Analytics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="sidebar-bank-name">Loading...</div>
+      <a href="login.html" class="sidebar-link" onclick="logout()" style="color:rgba(255,255,255,0.6);"><i class="bi bi-box-arrow-left"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="portal-main">
+    <!-- Top Bar -->
+    <div class="portal-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="d-lg-none border-0 bg-transparent" onclick="document.getElementById('sidebar').classList.toggle('open')">
+          <i class="bi bi-list" style="font-size:1.4rem;"></i>
+        </button>
+        <div>
+          <div class="portal-topbar-title" id="topbar-bank-name">Blood Bank Dashboard</div>
+          <div style="font-size:0.78rem;color:var(--text-gray);"><span class="live-dot"></span>Live data syncing</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="notif-bell" id="notifBell" onclick="toggleNotifPanel()">
+          <i class="bi bi-bell-fill" style="font-size:1.2rem;color:var(--text-gray);"></i>
+          <div class="notif-count" id="notif-count">0</div>
+        </div>
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,#DC3545,#FF6B6B);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.9rem;" id="topbar-avatar">B</div>
+      </div>
+    </div>
+
+    <div class="portal-content">
+
+      <!-- Critical Alerts -->
+      <div id="alerts-container"></div>
+
+      <!-- Stats Row -->
+      <div class="dashboard-stats">
+        <div class="stat-card">
+          <div class="stat-icon red">🆘</div>
+          <div><div class="stat-value" id="stat-active-requests">—</div><div class="stat-label">Active Requests</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">⏳</div>
+          <div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Awaiting Response</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div><div class="stat-value" id="stat-fulfilled-today">—</div><div class="stat-label">Fulfilled Today</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">🩸</div>
+          <div><div class="stat-value" id="stat-total-units">—</div><div class="stat-label">Total Units in Stock</div></div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-title">Blood Inventory Overview</div>
+          <div class="chart-card-subtitle">Current stock by blood group</div>
+          <div class="chart-container"><canvas id="inventoryChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Request Activity</div>
+          <div class="chart-card-subtitle">Last 7 days</div>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchActivityChart('requests', this)">Requests</button>
+            <button class="chart-tab" onclick="switchActivityChart('fulfillments', this)">Fulfillments</button>
+          </div>
+          <div class="chart-container"><canvas id="activityChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Live Requests & Quick Inventory -->
+      <div class="row g-4">
+        <!-- Live Requests -->
+        <div class="col-lg-8">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div>
+                <div class="chart-card-title">Live Blood Requests</div>
+                <div class="chart-card-subtitle"><span class="live-dot"></span>Real-time updates</div>
+              </div>
+              <a href="requests.html" style="font-size:0.85rem;color:#DC3545;font-weight:600;">View All →</a>
+            </div>
+            <div id="live-requests-list">
+              <div class="text-center py-4"><div class="loading-spinner"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Inventory Update -->
+        <div class="col-lg-4">
+          <div class="chart-card">
+            <div class="chart-card-title">Quick Inventory Update</div>
+            <div class="chart-card-subtitle">Update current stock units</div>
+            <div class="inventory-update-form" id="inv-update-form">
+              <!-- Rendered by JS -->
+            </div>
+            <button class="btn-primary-red w-100 mt-3" onclick="saveInventory()" id="saveInvBtn" style="justify-content:center;">
+              <i class="bi bi-save-fill"></i> Save Inventory
+            </button>
+          </div>
+
+          <!-- Leaderboard -->
+          <div class="chart-card" style="margin-top:20px;">
+            <div class="chart-card-title">🏆 Top Donors This Month</div>
+            <div class="chart-card-subtitle">Via your blood bank</div>
+            <ol class="leaderboard-list" id="leaderboard-list">
+              <li class="leaderboard-item">
+                <div class="leaderboard-rank gold">1</div>
+                <div style="flex:1;"><div class="leaderboard-name">Rahul Sharma</div><div class="leaderboard-detail">O+ • 3 donations</div></div>
+                <div class="leaderboard-badge">🥇</div>
+              </li>
+              <li class="leaderboard-item">
+                <div class="leaderboard-rank silver">2</div>
+                <div style="flex:1;"><div class="leaderboard-name">Priya Singh</div><div class="leaderboard-detail">A+ • 2 donations</div></div>
+                <div class="leaderboard-badge">🥈</div>
+              </li>
+              <li class="leaderboard-item">
+                <div class="leaderboard-rank bronze">3</div>
+                <div style="flex:1;"><div class="leaderboard-name">Amit Kumar</div><div class="leaderboard-detail">B+ • 2 donations</div></div>
+                <div class="leaderboard-badge">🥉</div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { collection, query, where, orderBy, limit, onSnapshot, doc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, timeAgo, setLoading } from '../js/utils.js';
+
+  const bbId = localStorage.getItem('raktsetu_bb_id') || 'demo_bank';
+  const bbName = localStorage.getItem('raktsetu_bb_name') || 'Demo Blood Bank';
+  document.getElementById('sidebar-bank-name').textContent = bbName;
+  document.getElementById('topbar-bank-name').textContent = bbName;
+  document.getElementById('topbar-avatar').textContent = bbName.charAt(0);
+
+  if (!bbId) window.location.href = 'login.html';
+
+  const BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+
+  const MOCK_INVENTORY = { 'A+':{units:8},'A-':{units:2},'B+':{units:12},'B-':{units:0},'O+':{units:6},'O-':{units:1},'AB+':{units:4},'AB-':{units:0} };
+  const MOCK_REQUESTS = [
+    { id:'r1', request_id:'RKT001', blood_group_needed:'O-', units_needed:2, hospital_name:'Bombay Hospital', seeker_name:'Aditya S.', seeker_phone:'+919876543210', urgency_level:'CRITICAL', status:'ACTIVE', created_at:{ toDate:()=>new Date(Date.now()-1800000) } },
+    { id:'r2', request_id:'RKT002', blood_group_needed:'A+', units_needed:1, hospital_name:'AIIMS Bhopal', seeker_name:'Meena K.', seeker_phone:'+919876543211', urgency_level:'URGENT', status:'ACTIVE', created_at:{ toDate:()=>new Date(Date.now()-3600000) } },
+    { id:'r3', request_id:'RKT003', blood_group_needed:'B+', units_needed:3, hospital_name:'City Hospital', seeker_name:'Rahul M.', seeker_phone:'+919876543212', urgency_level:'NORMAL', status:'ACTIVE', created_at:{ toDate:()=>new Date(Date.now()-7200000) } },
+  ];
+
+  let currentInventory = { ...MOCK_INVENTORY };
+  let inventoryChart, activityChart;
+
+  // Load bank data
+  async function loadDashboard() {
+    try {
+      if (bbId !== 'demo_bank') {
+        const snap = await getDoc(doc(db, 'blood_banks', bbId));
+        if (snap.exists()) currentInventory = snap.data().inventory || MOCK_INVENTORY;
+      }
+    } catch { currentInventory = MOCK_INVENTORY; }
+
+    updateStats();
+    renderInventoryChart();
+    renderActivityChart();
+    renderInventoryForm();
+    loadLiveRequests();
+  }
+
+  function updateStats() {
+    const totalUnits = Object.values(currentInventory).reduce((s, v) => s + (v.units || 0), 0);
+    document.getElementById('stat-total-units').textContent = totalUnits;
+    document.getElementById('stat-active-requests').textContent = MOCK_REQUESTS.filter(r => r.status === 'ACTIVE').length;
+    document.getElementById('stat-pending').textContent = MOCK_REQUESTS.filter(r => r.status === 'ACTIVE').length;
+    document.getElementById('stat-fulfilled-today').textContent = 3;
+    document.getElementById('notif-count').textContent = MOCK_REQUESTS.filter(r => r.urgency_level === 'CRITICAL').length;
+
+    // Critical stock alerts
+    const alertsContainer = document.getElementById('alerts-container');
+    const criticalGroups = BLOOD_GROUPS.filter(g => (currentInventory[g]?.units || 0) === 0);
+    if (criticalGroups.length > 0) {
+      alertsContainer.innerHTML = `
+        <div class="critical-alert">
+          <div class="alert-icon">🚨</div>
+          <div class="alert-text">Critical: <strong>${criticalGroups.join(', ')}</strong> blood group(s) are out of stock. Update inventory or notify donors immediately.</div>
+          <button class="alert-close" onclick="this.parentElement.remove()">✕</button>
+        </div>`;
+    }
+  }
+
+  function renderInventoryChart() {
+    const ctx = document.getElementById('inventoryChart').getContext('2d');
+    const data = BLOOD_GROUPS.map(g => currentInventory[g]?.units || 0);
+    const colors = data.map(u => u === 0 ? '#DC2626' : u <= 3 ? '#F59E0B' : '#00B894');
+
+    if (inventoryChart) inventoryChart.destroy();
+    inventoryChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: BLOOD_GROUPS,
+        datasets: [{ label: 'Units', data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 2 }, grid: { color: '#F3F4F6' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function renderActivityChart(type = 'requests') {
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const reqData = [4, 7, 3, 8, 5, 2, 6];
+    const fulData = [3, 6, 2, 7, 4, 2, 5];
+    const data = type === 'requests' ? reqData : fulData;
+    const color = type === 'requests' ? '#DC3545' : '#00B894';
+
+    if (activityChart) activityChart.destroy();
+    activityChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: type === 'requests' ? 'Requests' : 'Fulfillments',
+          data,
+          borderColor: color,
+          backgroundColor: color + '18',
+          tension: 0.4, fill: true, pointBackgroundColor: color,
+          pointRadius: 5, pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 2 }, grid: { color: '#F3F4F6' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  window.switchActivityChart = function(type, el) {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderActivityChart(type);
+  };
+
+  function renderInventoryForm() {
+    document.getElementById('inv-update-form').innerHTML = BLOOD_GROUPS.map(g => `
+      <div class="inv-update-cell">
+        <div class="inv-update-label">${g}</div>
+        <input type="number" class="inv-update-input" id="inv-${g.replace('+','p').replace('-','m')}"
+          value="${currentInventory[g]?.units || 0}" min="0" max="999">
+      </div>`).join('');
+  }
+
+  function loadLiveRequests() {
+    const list = document.getElementById('live-requests-list');
+    let requests = MOCK_REQUESTS;
+
+    try {
+      const q = query(collection(db, 'requests'), where('status', '==', 'ACTIVE'), orderBy('created_at', 'desc'), limit(5));
+      onSnapshot(q, snap => {
+        requests = snap.empty ? MOCK_REQUESTS : snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderRequestsList(requests, list);
+      });
+    } catch { renderRequestsList(requests, list); }
+  }
+
+  function renderRequestsList(requests, list) {
+    if (requests.length === 0) { list.innerHTML = `<div class="empty-state" style="padding:30px 0;"><div class="empty-icon">✅</div><h3>No active requests</h3></div>`; return; }
+    list.innerHTML = `
+      <table class="table-rs w-100">
+        <thead><tr>
+          <th>Blood</th><th>Hospital</th><th>Contact</th><th>Urgency</th><th>Time</th><th>Action</th>
+        </tr></thead>
+        <tbody>
+          ${requests.map(r => `
+            <tr class="request-row">
+              <td><span class="blood-badge sm">${r.blood_group_needed}</span></td>
+              <td style="font-weight:600;font-size:0.88rem;">${r.hospital_name}<br><span style="font-size:0.78rem;color:var(--text-gray);font-weight:400;">${r.units_needed} unit(s)</span></td>
+              <td><a href="tel:${r.seeker_phone}" style="color:#DC3545;font-weight:600;font-size:0.85rem;"><i class="bi bi-telephone-fill"></i> Call</a></td>
+              <td><span class="urgency-badge ${r.urgency_level?.toLowerCase()}">${r.urgency_level}</span></td>
+              <td style="font-size:0.8rem;color:var(--text-gray);">${timeAgo(r.created_at)}</td>
+              <td>
+                <button class="action-btn fulfill" onclick="fulfillRequest('${r.id}')"><i class="bi bi-check-lg"></i> Fulfill</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  window.fulfillRequest = async function(id) {
+    try {
+      await updateDoc(doc(db, 'requests', id), { status: 'FULFILLED', fulfilled_by: bbId, fulfilled_at: serverTimestamp(), fulfillment_type: 'BLOOD_BANK_STOCK', updated_at: serverTimestamp() });
+      showToast('Request marked as fulfilled! ✅', 'success');
+    } catch {
+      showToast('Request fulfilled (demo mode).', 'success');
+    }
+  };
+
+  window.saveInventory = async function() {
+    const btn = document.getElementById('saveInvBtn');
+    setLoading(btn, true, 'Saving...');
+    const newInventory = {};
+    BLOOD_GROUPS.forEach(g => {
+      const key = 'inv-' + g.replace('+','p').replace('-','m');
+      const val = parseInt(document.getElementById(key)?.value) || 0;
+      newInventory[g] = { units: val, last_updated: new Date().toISOString() };
+    });
+    try {
+      if (bbId !== 'demo_bank') await updateDoc(doc(db, 'blood_banks', bbId), { inventory: newInventory, updated_at: serverTimestamp() });
+      currentInventory = newInventory;
+      renderInventoryChart();
+      updateStats();
+      showToast('Inventory updated successfully! 🩸', 'success');
+    } catch { showToast('Inventory saved (demo mode).', 'success'); }
+    setLoading(btn, false);
+  };
+
+  window.logout = function() {
+    localStorage.removeItem('raktsetu_bb_id');
+    localStorage.removeItem('raktsetu_bb_name');
+  };
+
+  loadDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory – Blood Bank Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/bloodbank-portal.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .inv-card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      border: 2px solid transparent;
+    }
+    .inv-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .inv-card.critical { border-color: #DC2626; }
+    .inv-card.low { border-color: #F59E0B; }
+    .inv-card.good { border-color: #00B894; }
+    .inv-card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 5px; }
+    .inv-card.critical .inv-card-top-bar { background: linear-gradient(90deg,#DC2626,#EF4444); }
+    .inv-card.low .inv-card-top-bar { background: linear-gradient(90deg,#F59E0B,#FBBF24); }
+    .inv-card.good .inv-card-top-bar { background: linear-gradient(90deg,#00B894,#00cfa1); }
+
+    .inv-blood-group { font-family:'Poppins',sans-serif; font-size:2rem; font-weight:900; color:#DC3545; }
+    .inv-units-big { font-family:'Poppins',sans-serif; font-size:3rem; font-weight:900; line-height:1; margin:8px 0; }
+    .inv-units-big.critical { color:#DC2626; }
+    .inv-units-big.low { color:#F59E0B; }
+    .inv-units-big.good { color:#059669; }
+    .inv-card-label { font-size:0.75rem; color:var(--text-gray); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+    .inv-card-status { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; margin-top:8px; }
+    .inv-card-status.critical { background:#FEE2E2; color:#DC2626; }
+    .inv-card-status.low { background:#FEF3C7; color:#D97706; }
+    .inv-card-status.good { background:#D1FAE5; color:#059669; }
+
+    .inv-stepper { display:flex; align-items:center; gap:8px; margin-top:16px; }
+    .stepper-btn { width:32px; height:32px; border:2px solid #E5E7EB; background:white; border-radius:8px; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+    .stepper-btn:hover { border-color:#DC3545; color:#DC3545; }
+    .stepper-input { width:70px; text-align:center; border:2px solid #E5E7EB; border-radius:8px; padding:6px; font-family:'Poppins',sans-serif; font-weight:700; font-size:1rem; transition:all 0.2s; }
+    .stepper-input:focus { border-color:#DC3545; outline:none; }
+
+    .log-table-wrap { background:white; border-radius:16px; overflow:hidden; box-shadow:var(--shadow); }
+    .inv-grid-8 { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+
+    @media(max-width:1024px) { .inv-grid-8 { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:576px) { .inv-grid-8 { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+<div class="portal-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">🩸 Rakt<span>Setu</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="inventory.html" class="sidebar-link active"><i class="bi bi-droplet-fill"></i> Inventory</a>
+      <a href="requests.html" class="sidebar-link"><i class="bi bi-bell-fill"></i> Blood Requests</a>
+      <a href="verify-donation.html" class="sidebar-link"><i class="bi bi-patch-check-fill"></i> Verify Donation</a>
+      <a href="analytics.html" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i> Analytics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="sidebar-bank-name">Loading...</div>
+      <a href="login.html" class="sidebar-link" style="color:rgba(255,255,255,0.6);"><i class="bi bi-box-arrow-left"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <div class="portal-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="d-lg-none border-0 bg-transparent" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list" style="font-size:1.4rem;"></i></button>
+        <div class="portal-topbar-title">Blood Inventory</div>
+      </div>
+      <button class="btn-primary-red" onclick="saveAllInventory()" id="saveAllBtn">
+        <i class="bi bi-save-fill"></i> Save All Changes
+      </button>
+    </div>
+
+    <div class="portal-content">
+      <div class="portal-page-subtitle">Manage and update your blood group stock in real-time. Changes reflect instantly to seekers and donors.</div>
+
+      <!-- Summary Stats -->
+      <div class="dashboard-stats" style="margin-bottom:28px;">
+        <div class="stat-card"><div class="stat-icon red">🩸</div><div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Units</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-value" id="stat-available-groups">—</div><div class="stat-label">Groups Available</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">⚠️</div><div><div class="stat-value" id="stat-low-groups">—</div><div class="stat-label">Low Stock (≤3)</div></div></div>
+        <div class="stat-card"><div class="stat-icon red" style="background:#FEE2E2;">🚨</div><div><div class="stat-value" id="stat-out-groups">—</div><div class="stat-label">Out of Stock</div></div></div>
+      </div>
+
+      <!-- Inventory Cards Grid -->
+      <div class="inv-grid-8" id="invGrid"></div>
+
+      <!-- Chart + Log -->
+      <div class="row g-4 mt-2">
+        <div class="col-lg-6">
+          <div class="chart-card">
+            <div class="chart-card-title">Stock Distribution</div>
+            <div class="chart-card-subtitle">Visual breakdown of current inventory</div>
+            <div class="chart-container"><canvas id="stockChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="chart-card">
+            <div class="chart-card-title">Update Log</div>
+            <div class="chart-card-subtitle">Recent inventory changes</div>
+            <div id="update-log" style="display:flex;flex-direction:column;gap:10px;max-height:260px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, setLoading } from '../js/utils.js';
+
+  const bbId = localStorage.getItem('raktsetu_bb_id') || 'demo_bank';
+  document.getElementById('sidebar-bank-name').textContent = localStorage.getItem('raktsetu_bb_name') || 'Demo Blood Bank';
+
+  const BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+  let inventory = { 'A+':{units:8},'A-':{units:2},'B+':{units:12},'B-':{units:0},'O+':{units:6},'O-':{units:1},'AB+':{units:4},'AB-':{units:0} };
+  let updateLog = [];
+  let stockChart;
+
+  function getStatus(units) {
+    if (units === 0) return 'critical';
+    if (units <= 3) return 'low';
+    return 'good';
+  }
+  function getStatusLabel(units) {
+    if (units === 0) return '🚨 Out of Stock';
+    if (units <= 3) return '⚠️ Low Stock';
+    return '✅ Sufficient';
+  }
+
+  function renderGrid() {
+    document.getElementById('invGrid').innerHTML = BLOOD_GROUPS.map(g => {
+      const units = inventory[g]?.units || 0;
+      const status = getStatus(units);
+      const safeKey = g.replace('+','p').replace('-','m');
+      return `
+        <div class="inv-card ${status}" id="card-${safeKey}">
+          <div class="inv-card-top-bar"></div>
+          <div class="inv-blood-group">${g}</div>
+          <div class="inv-card-label">Blood Group</div>
+          <div class="inv-units-big ${status}" id="display-${safeKey}">${units}</div>
+          <div class="inv-card-label">Units in Stock</div>
+          <div class="inv-card-status ${status}">${getStatusLabel(units)}</div>
+          <div class="inv-stepper">
+            <button class="stepper-btn" onclick="adjustUnit('${g}', -1)">−</button>
+            <input type="number" class="stepper-input" id="inp-${safeKey}" value="${units}" min="0" max="999" oninput="onInputChange('${g}', this.value)">
+            <button class="stepper-btn" onclick="adjustUnit('${g}', 1)">+</button>
+          </div>
+        </div>`;
+    }).join('');
+    updateSummaryStats();
+    renderStockChart();
+  }
+
+  function updateSummaryStats() {
+    const values = BLOOD_GROUPS.map(g => inventory[g]?.units || 0);
+    document.getElementById('stat-total').textContent = values.reduce((a,b) => a+b, 0);
+    document.getElementById('stat-available-groups').textContent = values.filter(v => v > 0).length;
+    document.getElementById('stat-low-groups').textContent = values.filter(v => v > 0 && v <= 3).length;
+    document.getElementById('stat-out-groups').textContent = values.filter(v => v === 0).length;
+  }
+
+  function renderStockChart() {
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    const data = BLOOD_GROUPS.map(g => inventory[g]?.units || 0);
+    const colors = data.map(u => u === 0 ? '#DC2626' : u <= 3 ? '#F59E0B' : '#00B894');
+    if (stockChart) stockChart.destroy();
+    stockChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels: BLOOD_GROUPS, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, padding: 12 } }
+        }
+      }
+    });
+  }
+
+  window.adjustUnit = function(group, delta) {
+    const safeKey = group.replace('+','p').replace('-','m');
+    const input = document.getElementById('inp-' + safeKey);
+    const newVal = Math.max(0, Math.min(999, (inventory[group]?.units || 0) + delta));
+    inventory[group] = { ...inventory[group], units: newVal };
+    input.value = newVal;
+    updateCard(group, newVal);
+  };
+
+  window.onInputChange = function(group, val) {
+    const newVal = Math.max(0, Math.min(999, parseInt(val) || 0));
+    inventory[group] = { ...inventory[group], units: newVal };
+    updateCard(group, newVal);
+  };
+
+  function updateCard(group, units) {
+    const safeKey = group.replace('+','p').replace('-','m');
+    const status = getStatus(units);
+    const card = document.getElementById('card-' + safeKey);
+    const display = document.getElementById('display-' + safeKey);
+    if (card) { card.className = `inv-card ${status}`; }
+    if (display) { display.className = `inv-units-big ${status}`; display.textContent = units; }
+    updateSummaryStats();
+    renderStockChart();
+  }
+
+  window.saveAllInventory = async function() {
+    const btn = document.getElementById('saveAllBtn');
+    setLoading(btn, true, 'Saving...');
+    const newInventory = {};
+    BLOOD_GROUPS.forEach(g => {
+      const safeKey = g.replace('+','p').replace('-','m');
+      const val = parseInt(document.getElementById('inp-' + safeKey)?.value) || 0;
+      newInventory[g] = { units: val, last_updated: new Date().toISOString() };
+    });
+    try {
+      if (bbId !== 'demo_bank') await updateDoc(doc(db, 'blood_banks', bbId), { inventory: newInventory, updated_at: serverTimestamp() });
+      inventory = newInventory;
+      addLog('Inventory saved successfully');
+      showToast('Inventory updated! All blood groups saved. 🩸', 'success');
+    } catch { addLog('Inventory saved (demo)'); showToast('Inventory saved (demo mode).', 'success'); }
+    setLoading(btn, false);
+  };
+
+  function addLog(msg) {
+    updateLog.unshift({ msg, time: new Date().toLocaleTimeString('en-IN') });
+    const logEl = document.getElementById('update-log');
+    logEl.innerHTML = updateLog.slice(0, 10).map(l => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#F9FAFB;border-radius:8px;">
+        <span style="font-size:0.75rem;color:#9CA3AF;white-space:nowrap;">${l.time}</span>
+        <span style="font-size:0.85rem;color:var(--text-dark);">✅ ${l.msg}</span>
+      </div>`).join('');
+  }
+
+  async function loadInventory() {
+    try {
+      if (bbId !== 'demo_bank') {
+        const snap = await getDoc(doc(db, 'blood_banks', bbId));
+        if (snap.exists() && snap.data().inventory) inventory = snap.data().inventory;
+      }
+    } catch {}
+    renderGrid();
+    addLog('Inventory loaded');
+  }
+
+  loadInventory();
+</script>
+</body>
+</html>

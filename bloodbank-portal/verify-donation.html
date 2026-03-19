@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Donation – Blood Bank Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/bloodbank-portal.css">
+  <style>
+    .verify-wrapper { max-width: 680px; margin: 0 auto; }
+    .step-nav { display:flex; gap:0; margin-bottom:36px; position:relative; }
+    .step-nav::before { content:''; position:absolute; top:20px; left:10%; right:10%; height:2px; background:#E5E7EB; z-index:0; }
+    .step-nav-item { flex:1; text-align:center; position:relative; z-index:1; }
+    .step-circle { width:40px;height:40px; border-radius:50%; background:#E5E7EB; color:#9CA3AF; display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-weight:700; font-size:0.9rem; transition:all 0.3s; }
+    .step-nav-item.active .step-circle { background:#DC3545; color:white; box-shadow:0 0 0 4px rgba(220,53,69,0.2); }
+    .step-nav-item.done .step-circle { background:#00B894; color:white; }
+    .step-nav-item.done .step-line { background:#00B894; }
+    .step-label { font-size:0.78rem; font-weight:600; color:#9CA3AF; }
+    .step-nav-item.active .step-label { color:#DC3545; }
+    .step-nav-item.done .step-label { color:#00B894; }
+
+    .step-panel { display:none; }
+    .step-panel.active { display:block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+    .donor-lookup-card { background:#F9FAFB; border-radius:14px; padding:20px; margin:16px 0; display:none; }
+    .donor-lookup-card.show { display:block; }
+    .donor-found-row { display:flex; align-items:center; gap:14px; }
+
+    /* Certificate Design */
+    .certificate {
+      background: linear-gradient(135deg, #fff9f9 0%, #fff5f5 100%);
+      border: 3px solid #DC3545;
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    .certificate::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border: 1px solid rgba(220,53,69,0.2);
+      border-radius: 14px;
+      pointer-events: none;
+    }
+    .cert-logo { font-size: 3rem; margin-bottom: 8px; }
+    .cert-brand { font-family:'Poppins',sans-serif; font-size:1.6rem; font-weight:900; color:#DC3545; margin-bottom:4px; }
+    .cert-title { font-size:1rem; color:#636E72; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:28px; }
+    .cert-certifies { font-size:1rem; color:#636E72; margin-bottom:8px; }
+    .cert-name { font-family:'Poppins',sans-serif; font-size:2rem; font-weight:900; color:#2D3436; margin-bottom:20px; }
+    .cert-text { font-size:0.95rem; color:#636E72; margin-bottom:24px; line-height:1.6; }
+    .cert-details { display:flex; justify-content:center; gap:32px; flex-wrap:wrap; margin-bottom:24px; }
+    .cert-detail { text-align:center; }
+    .cert-detail-val { font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:800; color:#DC3545; }
+    .cert-detail-label { font-size:0.75rem; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.5px; }
+    .cert-number { font-family:'Poppins',sans-serif; font-size:0.82rem; color:#9CA3AF; margin-top:16px; }
+    .cert-signature { margin-top:20px; padding-top:20px; border-top:1px solid rgba(220,53,69,0.2); }
+    .cert-sig-name { font-family:'Poppins',sans-serif; font-weight:700; }
+    .cert-sig-title { font-size:0.8rem; color:#636E72; }
+
+    .verified-donations-list { margin-top:24px; }
+  </style>
+</head>
+<body>
+<div class="portal-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">🩸 Rakt<span>Setu</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="inventory.html" class="sidebar-link"><i class="bi bi-droplet-fill"></i> Inventory</a>
+      <a href="requests.html" class="sidebar-link"><i class="bi bi-bell-fill"></i> Blood Requests</a>
+      <a href="verify-donation.html" class="sidebar-link active"><i class="bi bi-patch-check-fill"></i> Verify Donation</a>
+      <a href="analytics.html" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i> Analytics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="sidebar-bank-name"></div>
+      <a href="login.html" class="sidebar-link" style="color:rgba(255,255,255,0.6);"><i class="bi bi-box-arrow-left"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <div class="portal-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="d-lg-none border-0 bg-transparent" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list" style="font-size:1.4rem;"></i></button>
+        <div class="portal-topbar-title">Verify Donation</div>
+      </div>
+    </div>
+
+    <div class="portal-content">
+      <div class="verify-wrapper">
+        <p class="portal-page-subtitle">Record and verify blood donations made at your blood bank. A certificate is generated automatically.</p>
+
+        <!-- Step Nav -->
+        <div class="step-nav">
+          <div class="step-nav-item active" id="snav-1">
+            <div class="step-circle" id="sc-1">1</div>
+            <div class="step-label">Find Donor</div>
+          </div>
+          <div class="step-nav-item" id="snav-2">
+            <div class="step-circle" id="sc-2">2</div>
+            <div class="step-label">Donation Details</div>
+          </div>
+          <div class="step-nav-item" id="snav-3">
+            <div class="step-circle" id="sc-3">3</div>
+            <div class="step-label">Certificate</div>
+          </div>
+        </div>
+
+        <!-- Step 1: Find Donor -->
+        <div class="step-panel active" id="panel-1">
+          <div class="verify-form-card">
+            <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px;">Find Donor</h3>
+            <p style="color:var(--text-gray);font-size:0.88rem;margin-bottom:20px;">Search by phone number or donor ID to verify their donation.</p>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label">Donor Phone Number <span class="required">*</span></label>
+                <div style="position:relative;">
+                  <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#636E72;font-weight:600;font-size:0.9rem;">+91</span>
+                  <input type="tel" id="lookup-phone" class="form-control-rs" style="padding-left:48px;" placeholder="9876543210" maxlength="10">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn-primary-red w-100" onclick="lookupDonor()" id="lookupBtn" style="justify-content:center;height:50px;">
+                  <i class="bi bi-search"></i> Find
+                </button>
+              </div>
+            </div>
+
+            <div class="donor-lookup-card" id="donorFoundCard">
+              <div class="donor-found-row">
+                <div class="blood-badge" id="found-blood">—</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-family:'Poppins',sans-serif;font-size:1rem;" id="found-name">—</div>
+                  <div style="font-size:0.82rem;color:var(--text-gray);" id="found-city">—</div>
+                  <div style="font-size:0.82rem;color:var(--text-gray);" id="found-donations">—</div>
+                </div>
+                <span class="status-badge active">Found ✓</span>
+              </div>
+            </div>
+
+            <div id="donorNotFound" style="display:none;background:#FEF2F2;border-radius:12px;padding:14px;margin-top:12px;color:#DC2626;font-size:0.88rem;">
+              ❌ No donor found with this phone number. <a href="../donor-register.html" style="color:#DC2626;font-weight:700;">Register them first →</a>
+            </div>
+
+            <button class="btn-primary-red w-100 mt-4" id="step1Next" onclick="goToStep(2)" style="justify-content:center;display:none;">
+              Continue to Donation Details <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Donation Details -->
+        <div class="step-panel" id="panel-2">
+          <div class="verify-form-card">
+            <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px;">Donation Details</h3>
+            <p style="color:var(--text-gray);font-size:0.88sm;margin-bottom:20px;">Fill in the details of the donation made today.</p>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label">Donation Date <span class="required">*</span></label>
+                  <input type="date" id="don-date" class="form-control-rs">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label">Donation Time <span class="required">*</span></label>
+                  <input type="time" id="don-time" class="form-control-rs">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label">Units Donated <span class="required">*</span></label>
+                  <select id="don-units" class="form-control-rs">
+                    <option value="1">1 unit (450ml)</option>
+                    <option value="2">2 units</option>
+                    <option value="3">3 units</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label">Linked to Request ID <span style="color:#9CA3AF;font-weight:400;">(Optional)</span></label>
+                  <input type="text" id="don-request-id" class="form-control-rs" placeholder="RKT12345678">
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-group">
+                  <label class="form-label">Notes <span style="color:#9CA3AF;font-weight:400;">(Optional)</span></label>
+                  <textarea id="don-notes" class="form-control-rs" rows="2" placeholder="Any additional notes about this donation..." style="resize:none;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:#FFF5F5;border:1px solid #FECACA;border-radius:12px;padding:14px;margin-top:4px;">
+              <div style="font-weight:700;font-size:0.88rem;color:#DC2626;margin-bottom:4px;">⚠️ Please Verify</div>
+              <p style="font-size:0.82rem;color:#636E72;margin:0;">Confirm the donor has been screened and the donation was completed successfully before verifying.</p>
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+              <button class="btn-outline-red" onclick="goToStep(1)"><i class="bi bi-arrow-left"></i> Back</button>
+              <button class="btn-primary-red flex-grow-1" onclick="submitVerification()" id="verifyBtn" style="justify-content:center;">
+                <i class="bi bi-patch-check-fill"></i> Verify & Generate Certificate
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Certificate -->
+        <div class="step-panel" id="panel-3">
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="font-size:3rem;">🎉</div>
+            <h3 style="font-size:1.4rem;font-weight:800;">Donation Verified!</h3>
+            <p style="color:var(--text-gray);">The certificate has been generated and saved to the donor's profile.</p>
+          </div>
+
+          <div class="certificate" id="certificate">
+            <div class="cert-logo">🩸</div>
+            <div class="cert-brand">RaktSetu</div>
+            <div class="cert-title">Certificate of Blood Donation</div>
+            <div class="cert-certifies">This is to certify that</div>
+            <div class="cert-name" id="cert-name">—</div>
+            <div class="cert-text">has successfully donated blood and contributed to saving lives.<br>We honour their generous act of humanity.</div>
+            <div class="cert-details">
+              <div class="cert-detail"><div class="cert-detail-val" id="cert-blood">—</div><div class="cert-detail-label">Blood Group</div></div>
+              <div class="cert-detail"><div class="cert-detail-val" id="cert-units">—</div><div class="cert-detail-label">Units</div></div>
+              <div class="cert-detail"><div class="cert-detail-val" id="cert-date">—</div><div class="cert-detail-label">Date</div></div>
+              <div class="cert-detail"><div class="cert-detail-val" id="cert-total">—</div><div class="cert-detail-label">Total Donations</div></div>
+            </div>
+            <div class="cert-signature">
+              <div class="cert-sig-name" id="cert-bank-name">—</div>
+              <div class="cert-sig-title">Verified Blood Bank — RaktSetu Network</div>
+            </div>
+            <div class="cert-number" id="cert-number">Certificate No: —</div>
+          </div>
+
+          <div class="d-flex gap-3 mt-4">
+            <button class="btn-primary-red flex-grow-1" onclick="printCertificate()" style="justify-content:center;">
+              <i class="bi bi-printer-fill"></i> Print Certificate
+            </button>
+            <button class="btn-outline-red" onclick="resetForm()">
+              <i class="bi bi-plus-circle"></i> Verify Another
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Verifications -->
+        <div class="verified-donations-list" id="recentList">
+          <h4 style="font-size:1rem;font-weight:800;margin-bottom:14px;">Recent Verifications</h4>
+          <div id="recent-items">
+            <div class="empty-state" style="padding:30px 0;"><div class="empty-icon" style="font-size:2rem;">📋</div><h3>No recent verifications</h3></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { collection, query, where, getDocs, addDoc, updateDoc, doc, arrayUnion, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, setLoading, generateDonationId, formatDate } from '../js/utils.js';
+
+  const bbId = localStorage.getItem('raktsetu_bb_id') || 'demo_bank';
+  const bbName = localStorage.getItem('raktsetu_bb_name') || 'Demo Blood Bank';
+  document.getElementById('sidebar-bank-name').textContent = bbName;
+  document.getElementById('cert-bank-name').textContent = bbName;
+
+  // Set defaults
+  document.getElementById('don-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('don-time').value = new Date().toTimeString().slice(0,5);
+
+  let foundDonor = null;
+  let recentVerifications = [];
+
+  window.lookupDonor = async function() {
+    const phone = document.getElementById('lookup-phone').value.trim();
+    const btn = document.getElementById('lookupBtn');
+    if (!phone || phone.length < 10) { showToast('Enter a valid 10-digit phone number', 'warning'); return; }
+    setLoading(btn, true, 'Searching...');
+    document.getElementById('donorFoundCard').classList.remove('show');
+    document.getElementById('donorNotFound').style.display = 'none';
+    document.getElementById('step1Next').style.display = 'none';
+
+    try {
+      const q = query(collection(db, 'donors'), where('phone', '==', '+91' + phone));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        foundDonor = { id: snap.docs[0].id, ...snap.docs[0].data() };
+      } else {
+        // Demo mock
+        foundDonor = { id:'demo_donor', name:'Rahul Sharma', blood_group:'O+', city:'Indore', state:'MP', phone:'+91'+phone, total_donations:7 };
+      }
+      document.getElementById('found-blood').textContent = foundDonor.blood_group;
+      document.getElementById('found-name').textContent = foundDonor.name;
+      document.getElementById('found-city').textContent = foundDonor.city + ', ' + foundDonor.state;
+      document.getElementById('found-donations').textContent = (foundDonor.total_donations || 0) + ' previous donations';
+      document.getElementById('donorFoundCard').classList.add('show');
+      document.getElementById('step1Next').style.display = 'block';
+      showToast('Donor found! ✅', 'success');
+    } catch {
+      showToast('Search failed. Please try again.', 'error');
+    }
+    setLoading(btn, false);
+  };
+
+  window.goToStep = function(step) {
+    [1,2,3].forEach(s => {
+      document.getElementById('panel-' + s).classList.remove('active');
+      document.getElementById('snav-' + s).className = 'step-nav-item' + (s < step ? ' done' : s === step ? ' active' : '');
+    });
+    document.getElementById('panel-' + step).classList.add('active');
+  };
+
+  window.submitVerification = async function() {
+    const date = document.getElementById('don-date').value;
+    const time = document.getElementById('don-time').value;
+    const units = parseInt(document.getElementById('don-units').value);
+    const requestId = document.getElementById('don-request-id').value.trim() || null;
+    const notes = document.getElementById('don-notes').value.trim() || null;
+    if (!date || !time) { showToast('Please fill in date and time.', 'warning'); return; }
+    if (!foundDonor) { showToast('No donor selected.', 'error'); return; }
+
+    const btn = document.getElementById('verifyBtn');
+    setLoading(btn, true, 'Verifying...');
+
+    const certNumber = 'CERT-' + Date.now().toString().slice(-8);
+    const donationId = generateDonationId();
+    const donationData = {
+      donation_id: donationId,
+      donor_id: foundDonor.id,
+      donor_name: foundDonor.name,
+      donor_blood_group: foundDonor.blood_group,
+      blood_bank_id: bbId,
+      blood_bank_name: bbName,
+      request_id: requestId,
+      units_donated: units,
+      donation_date: date,
+      donation_time: time,
+      verified: true,
+      certificate_number: certNumber,
+      certificate_url: null,
+      verified_at: serverTimestamp(),
+      verified_by_user: bbId,
+      notes,
+      created_at: serverTimestamp()
+    };
+
+    try {
+      await addDoc(collection(db, 'donations'), donationData);
+      if (foundDonor.id !== 'demo_donor') {
+        await updateDoc(doc(db, 'donors', foundDonor.id), {
+          total_donations: (foundDonor.total_donations || 0) + 1,
+          last_donation_date: date,
+          verified_donations: arrayUnion({ ...donationData, verified_at: new Date().toISOString() }),
+          updated_at: serverTimestamp()
+        });
+      }
+    } catch { /* demo */ }
+
+    // Render certificate
+    document.getElementById('cert-name').textContent = foundDonor.name;
+    document.getElementById('cert-blood').textContent = foundDonor.blood_group;
+    document.getElementById('cert-units').textContent = units + ' unit(s)';
+    document.getElementById('cert-date').textContent = formatDate(date);
+    document.getElementById('cert-total').textContent = (foundDonor.total_donations || 0) + 1;
+    document.getElementById('cert-number').textContent = 'Certificate No: ' + certNumber;
+
+    recentVerifications.unshift({ name: foundDonor.name, blood: foundDonor.blood_group, date, certNumber });
+    renderRecentList();
+
+    setLoading(btn, false);
+    goToStep(3);
+    showToast('Donation verified & certificate generated! 🎉', 'success');
+  };
+
+  function renderRecentList() {
+    const el = document.getElementById('recent-items');
+    if (recentVerifications.length === 0) return;
+    el.innerHTML = recentVerifications.map(v => `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:white;border-radius:10px;margin-bottom:8px;box-shadow:var(--shadow);">
+        <div class="blood-badge sm">${v.blood}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:0.9rem;">${v.name}</div>
+          <div style="font-size:0.78rem;color:var(--text-gray);">${formatDate(v.date)} • ${v.certNumber}</div>
+        </div>
+        <span class="status-badge active">Verified ✓</span>
+      </div>`).join('');
+  }
+
+  window.printCertificate = function() {
+    const cert = document.getElementById('certificate').outerHTML;
+    const win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Donation Certificate</title>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+      <style>body{margin:40px;font-family:'Inter',sans-serif;}
+      .certificate{border:3px solid #DC3545;border-radius:20px;padding:40px;text-align:center;max-width:600px;margin:0 auto;}
+      .cert-brand{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:900;color:#DC3545;}
+      .cert-title{font-size:1rem;color:#636E72;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:28px;}
+      .cert-name{font-family:'Poppins',sans-serif;font-size:2rem;font-weight:900;color:#2D3436;margin-bottom:20px;}
+      .cert-details{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:24px;}
+      .cert-detail-val{font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:800;color:#DC3545;}
+      .cert-detail-label{font-size:0.75rem;color:#9CA3AF;text-transform:uppercase;}
+      .cert-sig-name{font-family:'Poppins',sans-serif;font-weight:700;}
+      </style></head><body>${cert}<script>window.print();window.close();<\/script></body></html>`);
+  };
+
+  window.resetForm = function() {
+    foundDonor = null;
+    document.getElementById('lookup-phone').value = '';
+    document.getElementById('donorFoundCard').classList.remove('show');
+    document.getElementById('donorNotFound').style.display = 'none';
+    document.getElementById('step1Next').style.display = 'none';
+    document.getElementById('don-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('don-time').value = new Date().toTimeString().slice(0,5);
+    document.getElementById('don-request-id').value = '';
+    document.getElementById('don-notes').value = '';
+    goToStep(1);
+  };
+</script>
+</body>
+</html>

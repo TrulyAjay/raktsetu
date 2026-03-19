@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics – Blood Bank Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/bloodbank-portal.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .period-btns { display:flex; gap:8px; flex-wrap:wrap; }
+    .analytics-table { width:100%; border-collapse:collapse; }
+    .analytics-table th { padding:12px 14px; text-align:left; font-size:0.78rem; font-weight:700; color:#636E72; text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid #F3F4F6; background:#F9FAFB; }
+    .analytics-table td { padding:14px 14px; border-bottom:1px solid #F9FAFB; font-size:0.88rem; }
+    .analytics-table tfoot td { background:#F9FAFB; font-weight:700; border-top:2px solid #E5E7EB; }
+    .stock-indicator { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+    .stock-indicator.good { background:#D1FAE5; color:#059669; }
+    .stock-indicator.low { background:#FEF3C7; color:#D97706; }
+    .stock-indicator.out { background:#FEE2E2; color:#DC2626; }
+
+    .insight-panel {
+      background: linear-gradient(135deg, #DC3545, #b71c1c);
+      border-radius: 16px;
+      padding: 24px;
+      color: white;
+    }
+    .insight-title { font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:16px; }
+    .insight-row { display:flex; gap:10px; margin-bottom:12px; align-items:flex-start; }
+    .insight-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+    .insight-text { font-size:0.85rem; opacity:0.92; line-height:1.5; }
+
+    .export-btns { display:flex; gap:10px; margin-bottom:28px; flex-wrap:wrap; }
+    .export-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 20px; border-radius:10px; font-weight:600; font-size:0.88rem;
+      cursor:pointer; border:2px solid #E5E7EB; background:white;
+      color:var(--text-dark); transition:all 0.2s;
+    }
+    .export-btn:hover { border-color:#DC3545; color:#DC3545; transform:translateY(-2px); }
+  </style>
+</head>
+<body>
+<div class="portal-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">🩸 Rakt<span>Setu</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="inventory.html" class="sidebar-link"><i class="bi bi-droplet-fill"></i> Inventory</a>
+      <a href="requests.html" class="sidebar-link"><i class="bi bi-bell-fill"></i> Blood Requests</a>
+      <a href="verify-donation.html" class="sidebar-link"><i class="bi bi-patch-check-fill"></i> Verify Donation</a>
+      <a href="analytics.html" class="sidebar-link active"><i class="bi bi-bar-chart-fill"></i> Analytics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:10px;" id="sidebar-bank-name"></div>
+      <a href="login.html" class="sidebar-link" style="color:rgba(255,255,255,0.6);"><i class="bi bi-box-arrow-left"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <div class="portal-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="d-lg-none border-0 bg-transparent" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list" style="font-size:1.4rem;"></i></button>
+        <div class="portal-topbar-title">Analytics</div>
+      </div>
+      <div class="period-btns">
+        <button class="analytics-period-btn active" onclick="setPeriod(7, this)">7 Days</button>
+        <button class="analytics-period-btn" onclick="setPeriod(30, this)">30 Days</button>
+        <button class="analytics-period-btn" onclick="setPeriod(90, this)">90 Days</button>
+      </div>
+    </div>
+
+    <div class="portal-content">
+      <div class="portal-page-subtitle">Track your blood bank performance, fulfillment rates, and inventory trends over time.</div>
+
+      <!-- Export -->
+      <div class="export-btns">
+        <button class="export-btn" onclick="exportCSV()"><i class="bi bi-file-earmark-spreadsheet"></i> Export CSV</button>
+        <button class="export-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print Report</button>
+      </div>
+
+      <!-- KPI Stats -->
+      <div class="dashboard-stats" style="margin-bottom:28px;">
+        <div class="stat-card"><div class="stat-icon red">📥</div><div><div class="stat-value" id="kpi-requests">—</div><div class="stat-label">Total Requests</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-value" id="kpi-fulfilled">—</div><div class="stat-label">Fulfilled</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">📈</div><div><div class="stat-value" id="kpi-rate">—</div><div class="stat-label">Success Rate</div></div></div>
+        <div class="stat-card"><div class="stat-icon orange">⚡</div><div><div class="stat-value" id="kpi-avgtime">—</div><div class="stat-label">Avg Response Time</div></div></div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="charts-grid" style="margin-bottom:24px;">
+        <div class="chart-card">
+          <div class="chart-card-title">Requests vs Fulfillments</div>
+          <div class="chart-card-subtitle" id="chart1-subtitle">Last 7 days</div>
+          <div class="chart-container"><canvas id="requestsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Fulfillment by Blood Group</div>
+          <div class="chart-card-subtitle">Total fulfilled per group</div>
+          <div class="chart-container"><canvas id="bloodGroupChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="charts-grid" style="margin-bottom:28px;">
+        <div class="chart-card">
+          <div class="chart-card-title">Fulfillment Type Breakdown</div>
+          <div class="chart-card-subtitle">Stock vs Donor mobilization</div>
+          <div class="chart-container" style="height:200px;"><canvas id="fulfillTypeChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Donations Over Time</div>
+          <div class="chart-card-subtitle">Verified donations trend</div>
+          <div class="chart-container"><canvas id="donationsChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Table + Insights -->
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="chart-card">
+            <div class="chart-card-title">Breakdown by Blood Group</div>
+            <div style="overflow-x:auto;">
+              <table class="analytics-table" id="bloodGroupTable">
+                <thead>
+                  <tr>
+                    <th>Blood Group</th>
+                    <th>Requests</th>
+                    <th>Stock Fulfilled</th>
+                    <th>Donor Fulfilled</th>
+                    <th>Current Stock</th>
+                    <th>Success Rate</th>
+                    <th>Avg Response</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot><tr id="tableFooter"></tr></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="insight-panel">
+            <div class="insight-title">💡 Key Insights</div>
+            <div id="insights-list"></div>
+          </div>
+
+          <div class="chart-card" style="margin-top:20px;">
+            <div class="chart-card-title">🏆 Top Donors</div>
+            <ol class="leaderboard-list" style="list-style:none;padding:0;">
+              <li class="leaderboard-item"><div class="leaderboard-rank gold">1</div><div style="flex:1;"><div class="leaderboard-name">Rahul Sharma</div><div class="leaderboard-detail">O+ • 5 donations</div></div><div class="leaderboard-badge">🥇</div></li>
+              <li class="leaderboard-item"><div class="leaderboard-rank silver">2</div><div style="flex:1;"><div class="leaderboard-name">Priya Singh</div><div class="leaderboard-detail">A+ • 4 donations</div></div><div class="leaderboard-badge">🥈</div></li>
+              <li class="leaderboard-item"><div class="leaderboard-rank bronze">3</div><div style="flex:1;"><div class="leaderboard-name">Amit Kumar</div><div class="leaderboard-detail">B+ • 3 donations</div></div><div class="leaderboard-badge">🥉</div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  document.getElementById('sidebar-bank-name').textContent = localStorage.getItem('raktsetu_bb_name') || 'Demo Blood Bank';
+
+  const BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+  const INVENTORY = { 'A+':{units:8},'A-':{units:2},'B+':{units:12},'B-':{units:0},'O+':{units:6},'O-':{units:1},'AB+':{units:4},'AB-':{units:0} };
+
+  let currentPeriod = 7;
+  let charts = {};
+
+  function generateMockData(days) {
+    const requests = [];
+    const now = Date.now();
+    const bg = BLOOD_GROUPS;
+    for (let i = 0; i < days * 2; i++) {
+      const group = bg[Math.floor(Math.random() * bg.length)];
+      const fulfilled = Math.random() > 0.3;
+      const type = Math.random() > 0.5 ? 'BLOOD_BANK_STOCK' : 'DONOR_MOBILIZED';
+      const created = now - Math.random() * days * 86400000;
+      const fulfilledAt = fulfilled ? created + Math.random() * 3600000 * 3 : null;
+      requests.push({ blood_group_needed: group, status: fulfilled ? 'FULFILLED' : 'ACTIVE', fulfillment_type: fulfilled ? type : null, created_at_ms: created, fulfilled_at_ms: fulfilledAt });
+    }
+    return requests;
+  }
+
+  function getDayLabels(days) {
+    const labels = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      labels.push(d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }));
+    }
+    return labels;
+  }
+
+  function renderAll(period) {
+    const data = generateMockData(period);
+    const labels = getDayLabels(Math.min(period, 14));
+    const buckets = period <= 14 ? period : 14;
+
+    document.getElementById('chart1-subtitle').textContent = `Last ${period} days`;
+
+    // KPIs
+    const total = data.length;
+    const fulfilled = data.filter(r => r.status === 'FULFILLED').length;
+    const rate = total > 0 ? ((fulfilled / total) * 100).toFixed(1) : 0;
+    const avgTime = Math.floor(Math.random() * 30 + 25);
+    document.getElementById('kpi-requests').textContent = total;
+    document.getElementById('kpi-fulfilled').textContent = fulfilled;
+    document.getElementById('kpi-rate').textContent = rate + '%';
+    document.getElementById('kpi-avgtime').textContent = avgTime + ' min';
+
+    // Requests vs Fulfillments chart
+    const reqPerDay = labels.map((_, i) => Math.floor(Math.random() * 6 + 1));
+    const fulPerDay = reqPerDay.map(r => Math.floor(r * 0.7));
+    destroyAndCreate('requestsChart', {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Requests', data: reqPerDay, backgroundColor: 'rgba(220,53,69,0.7)', borderRadius: 6 },
+          { label: 'Fulfilled', data: fulPerDay, backgroundColor: 'rgba(0,184,148,0.7)', borderRadius: 6 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, grid: { color: '#F3F4F6' } }, x: { grid: { display: false } } } }
+    });
+
+    // Blood group chart
+    const bgData = BLOOD_GROUPS.map(g => data.filter(r => r.blood_group_needed === g && r.status === 'FULFILLED').length);
+    destroyAndCreate('bloodGroupChart', {
+      type: 'bar',
+      data: { labels: BLOOD_GROUPS, datasets: [{ label: 'Fulfilled', data: bgData, backgroundColor: ['#DC3545','#E74C3C','#E67E22','#D35400','#27AE60','#1E8449','#8E44AD','#6C3483'], borderRadius: 8, borderSkipped: false }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#F3F4F6' } }, x: { grid: { display: false } } } }
+    });
+
+    // Fulfillment type doughnut
+    const stockFul = data.filter(r => r.fulfillment_type === 'BLOOD_BANK_STOCK').length;
+    const donorFul = data.filter(r => r.fulfillment_type === 'DONOR_MOBILIZED').length;
+    destroyAndCreate('fulfillTypeChart', {
+      type: 'doughnut',
+      data: { labels: ['From Stock', 'Donor Mobilized', 'Unfulfilled'], datasets: [{ data: [stockFul, donorFul, total - fulfilled], backgroundColor: ['#00B894','#0284C7','#E5E7EB'], borderWidth: 0, hoverOffset: 8 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+    });
+
+    // Donations over time
+    const donPerDay = labels.map(() => Math.floor(Math.random() * 4 + 1));
+    destroyAndCreate('donationsChart', {
+      type: 'line',
+      data: { labels, datasets: [{ label: 'Donations', data: donPerDay, borderColor: '#DC3545', backgroundColor: 'rgba(220,53,69,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#DC3545', pointRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#F3F4F6' } }, x: { grid: { display: false } } } }
+    });
+
+    // Table
+    let totReq=0, totStock=0, totDonor=0;
+    document.getElementById('tableBody').innerHTML = BLOOD_GROUPS.map(g => {
+      const gr = data.filter(r => r.blood_group_needed === g);
+      const totalR = gr.length;
+      const stockF = gr.filter(r => r.fulfillment_type === 'BLOOD_BANK_STOCK').length;
+      const donorF = gr.filter(r => r.fulfillment_type === 'DONOR_MOBILIZED').length;
+      const curStock = INVENTORY[g]?.units || 0;
+      const sRate = totalR > 0 ? (((stockF + donorF) / totalR) * 100).toFixed(1) : '—';
+      const avgT = totalR > 0 ? Math.floor(Math.random() * 40 + 20) + ' min' : '—';
+      const stockCls = curStock === 0 ? 'out' : curStock <= 3 ? 'low' : 'good';
+      totReq+=totalR; totStock+=stockF; totDonor+=donorF;
+      return `<tr>
+        <td><span class="blood-badge sm">${g}</span></td>
+        <td style="text-align:center;">${totalR}</td>
+        <td style="text-align:center;">${stockF}</td>
+        <td style="text-align:center;">${donorF}</td>
+        <td><span class="stock-indicator ${stockCls}">${curStock} units</span></td>
+        <td style="font-weight:700;">${sRate}${sRate !== '—' ? '%' : ''}</td>
+        <td style="color:var(--text-gray);">${avgT}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('tableFooter').innerHTML = `
+      <td><strong>TOTAL</strong></td>
+      <td style="text-align:center;"><strong>${totReq}</strong></td>
+      <td style="text-align:center;"><strong>${totStock}</strong></td>
+      <td style="text-align:center;"><strong>${totDonor}</strong></td>
+      <td><strong>${Object.values(INVENTORY).reduce((s,v)=>s+(v.units||0),0)} units</strong></td>
+      <td><strong>${totReq > 0 ? (((totStock+totDonor)/totReq)*100).toFixed(1) : 0}%</strong></td>
+      <td><strong>~35 min</strong></td>`;
+
+    // Insights
+    const outGroups = BLOOD_GROUPS.filter(g => (INVENTORY[g]?.units||0) === 0);
+    const lowGroups = BLOOD_GROUPS.filter(g => { const u = INVENTORY[g]?.units||0; return u>0&&u<=3; });
+    const topGroup = BLOOD_GROUPS.reduce((a,b) => (data.filter(r=>r.blood_group_needed===b).length > data.filter(r=>r.blood_group_needed===a).length) ? b : a);
+    document.getElementById('insights-list').innerHTML = [
+      outGroups.length > 0 ? `<div class="insight-row"><div class="insight-icon">🚨</div><div class="insight-text"><strong>${outGroups.join(', ')}</strong> ${outGroups.length===1?'is':'are'} completely out of stock. Contact donors immediately.</div></div>` : '',
+      lowGroups.length > 0 ? `<div class="insight-row"><div class="insight-icon">⚠️</div><div class="insight-text"><strong>${lowGroups.join(', ')}</strong> running low. Consider outreach campaigns.</div></div>` : '',
+      `<div class="insight-row"><div class="insight-icon">📊</div><div class="insight-text"><strong>${topGroup}</strong> has the most requests this period. Keep stock levels high.</div></div>`,
+      `<div class="insight-row"><div class="insight-icon">✅</div><div class="insight-text">Your fulfillment rate is <strong>${rate}%</strong> — ${parseFloat(rate) > 70 ? 'excellent performance!' : 'consider increasing donor outreach.'}</div></div>`,
+      `<div class="insight-row"><div class="insight-icon">⚡</div><div class="insight-text">Average response time is <strong>${avgTime} min</strong> — ${avgTime < 45 ? 'great!' : 'aim for under 45 minutes.'}</div></div>`
+    ].filter(Boolean).join('');
+  }
+
+  function destroyAndCreate(id, config) {
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(document.getElementById(id).getContext('2d'), config);
+  }
+
+  window.setPeriod = function(period, el) {
+    currentPeriod = period;
+    document.querySelectorAll('.analytics-period-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    renderAll(period);
+  };
+
+  window.exportCSV = function() {
+    const data = generateMockData(currentPeriod);
+    let csv = 'Blood Group,Requests,Stock Fulfilled,Donor Fulfilled,Current Stock,Success Rate\n';
+    BLOOD_GROUPS.forEach(g => {
+      const gr = data.filter(r=>r.blood_group_needed===g);
+      const t=gr.length, s=gr.filter(r=>r.fulfillment_type==='BLOOD_BANK_STOCK').length;
+      const d=gr.filter(r=>r.fulfillment_type==='DONOR_MOBILIZED').length;
+      const stock=INVENTORY[g]?.units||0;
+      const rate=t>0?(((s+d)/t)*100).toFixed(1):0;
+      csv+=`${g},${t},${s},${d},${stock},${rate}%\n`;
+    });
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`RaktSetu_Analytics_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  renderAll(7);
+</script>
+</body>
+</html>

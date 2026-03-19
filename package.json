@@ -1,0 +1,28 @@
+{
+  "name": "raktsetu",
+  "version": "1.0.0",
+  "description": "RaktSetu - Real-Time Blood Donor Network connecting seekers, donors, and blood banks across India.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx live-server --port=3000 --open=index.html",
+    "build": "echo 'Static site - no build step required'"
+  },
+  "keywords": [
+    "blood-donation",
+    "healthcare",
+    "firebase",
+    "real-time",
+    "india"
+  ],
+  "author": "RaktSetu Team",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "serve": "^14.2.1"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

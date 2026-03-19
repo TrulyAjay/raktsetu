@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Track your blood requests on RaktSetu.">
+  <title>Seeker Dashboard – RaktSetu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+    <style>
+    .seeker-layout { display:grid; grid-template-columns:260px 1fr; height:calc(100vh - 64px); overflow:hidden; }
+    .seeker-sidebar { background:white; border-right:1px solid #E5E7EB; padding:20px 16px; height:100%; overflow-y:auto; overflow-x:hidden; }
+    .seeker-main { background:#F8FAFC; padding:28px 24px; overflow-y:auto; overflow-x:hidden; height:100%; }
+    .request-tracker-card { background:white; border-radius:16px; padding:22px; box-shadow:0 1px 6px rgba(0,0,0,0.06); margin-bottom:14px; border-left:4px solid #DC3545; border:1px solid #E5E7EB; border-left:4px solid #DC3545; transition:box-shadow 0.18s; }
+    .request-tracker-card.fulfilled { border-left-color:#00B894; }
+    .request-tracker-card.closed { border-left-color:#9CA3AF; }
+    .request-progress { display:flex; gap:0; margin:14px 0; position:relative; }
+    .request-progress::before { content:''; position:absolute; top:13px; left:20px; right:20px; height:2px; background:#E5E7EB; z-index:0; }
+    .req-step { flex:1; text-align:center; position:relative; z-index:1; }
+    .req-step-dot { width:26px; height:26px; border-radius:50%; background:#E5E7EB; display:flex; align-items:center; justify-content:center; margin:0 auto 5px; font-size:0.68rem; font-weight:700; color:#9CA3AF; }
+    .req-step.done .req-step-dot { background:#00B894; color:white; }
+    .req-step.active .req-step-dot { background:#DC3545; color:white; animation:pulseRed 1.5s infinite; }
+    @keyframes pulseRed { 0%,100%{box-shadow:0 0 0 0 rgba(220,53,69,0.4)} 50%{box-shadow:0 0 0 7px rgba(220,53,69,0)} }
+    .req-step-label { font-size:0.68rem; color:#9CA3AF; font-weight:600; }
+    .req-step.done .req-step-label,.req-step.active .req-step-label { color:#1E2328; }
+    .quick-action-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+    .quick-action-card { background:white; border-radius:12px; padding:18px; text-align:center; cursor:pointer; box-shadow:0 1px 6px rgba(0,0,0,0.06); transition:all 0.18s; border:1.5px solid transparent; text-decoration:none; color:inherit; display:block; }
+    .quick-action-card:hover { border-color:#DC3545; transform:translateY(-3px); color:inherit; }
+    .quick-action-icon { font-size:1.8rem; margin-bottom:7px; }
+    .quick-action-label { font-weight:700; font-size:0.84rem; }
+    @media(max-width:992px) { .seeker-layout{grid-template-columns:1fr} .seeker-sidebar{position:relative;height:auto;top:0;border-right:none;border-bottom:1px solid #E5E7EB} .seeker-main{padding:22px 16px} }
+  </style>
+</head>
+<body>
+<link rel="stylesheet" href="../css/navbar.css">
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../index.html">🩸 Rakt<span>Setu</span></a>
+    <ul class="rks-nav">
+
+      <li class="nav-item">
+        <a class="nav-top-link" href="../index.html">Home</a>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Seeker <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="request-blood.html">
+            <div class="dropdown-icon">🆘</div>
+            <div class="dropdown-text"><span class="dropdown-label">Request Blood</span><span class="dropdown-desc">Post an urgent blood request</span></div>
+          </a>
+          <a class="dropdown-link" href="find-donors.html">
+            <div class="dropdown-icon">🔍</div>
+            <div class="dropdown-text"><span class="dropdown-label">Find Donors</span><span class="dropdown-desc">Search verified donors nearby</span></div>
+          </a>
+          <a class="dropdown-link" href="blood-banks.html">
+            <div class="dropdown-icon">🏥</div>
+            <div class="dropdown-text"><span class="dropdown-label">Blood Banks</span><span class="dropdown-desc">Check live inventory near you</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link active" href="seeker-dashboard.html">
+            <div class="dropdown-icon">📋</div>
+            <div class="dropdown-text"><span class="dropdown-label">Track My Request</span><span class="dropdown-desc">View your active requests</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Donor <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="donor-register.html">
+            <div class="dropdown-icon">❤️</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register</span><span class="dropdown-desc">Join as a verified donor</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-dashboard.html">
+            <div class="dropdown-icon">📊</div>
+            <div class="dropdown-text"><span class="dropdown-label">My Dashboard</span><span class="dropdown-desc">Track donations & availability</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-confirm.html">
+            <div class="dropdown-icon">✅</div>
+            <div class="dropdown-text"><span class="dropdown-label">Confirm Donation</span><span class="dropdown-desc">Verify using Tracking ID</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item nav-item-last">
+        <button class="nav-top-link" aria-haspopup="true">
+          Blood Bank <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown nav-dropdown-right">
+          <a class="dropdown-link" href="../bloodbank-portal/login.html">
+            <div class="dropdown-icon">🔐</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Login</span><span class="dropdown-desc">Sign in to your blood bank</span></div>
+          </a>
+          <a class="dropdown-link" href="../bloodbank-portal/bloodbank-register.html">
+            <div class="dropdown-icon">🏦</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register Blood Bank</span><span class="dropdown-desc">Join the RaktSetu network</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="../bloodbank-portal/dashboard.html">
+            <div class="dropdown-icon">📈</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Dashboard</span><span class="dropdown-desc">Manage inventory & requests</span></div>
+          </a>
+        </div>
+      </li>
+
+    </ul>
+    <button class="navbar-toggler" id="mobileToggler" onclick="toggleMobileNav()" aria-label="Menu">
+      <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
+    </button>
+  </div>
+</nav>
+
+<div class="navbar-mobile" id="mobileNav">
+  <a class="mobile-top-link" href="../index.html">🏠 Home</a>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Seeker <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="request-blood.html"><span class="mobile-link-icon">🆘</span> Request Blood</a>
+      <a class="mobile-link" href="find-donors.html"><span class="mobile-link-icon">🔍</span> Find Donors</a>
+      <a class="mobile-link" href="blood-banks.html"><span class="mobile-link-icon">🏥</span> Blood Banks</a>
+      <a class="mobile-link active" href="seeker-dashboard.html"><span class="mobile-link-icon">📋</span> Track My Request</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Donor <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="donor-register.html"><span class="mobile-link-icon">❤️</span> Register</a>
+      <a class="mobile-link" href="donor-dashboard.html"><span class="mobile-link-icon">📊</span> My Dashboard</a>
+      <a class="mobile-link" href="donor-confirm.html"><span class="mobile-link-icon">✅</span> Confirm Donation</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Blood Bank <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="../bloodbank-portal/login.html"><span class="mobile-link-icon">🔐</span> Portal Login</a>
+      <a class="mobile-link" href="../bloodbank-portal/bloodbank-register.html"><span class="mobile-link-icon">🏦</span> Register Blood Bank</a>
+      <a class="mobile-link" href="../bloodbank-portal/dashboard.html"><span class="mobile-link-icon">📈</span> Portal Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    window.addEventListener('scroll', function() {
+      var nb = document.getElementById('mainNavbar');
+      if (nb) nb.classList.toggle('scrolled', window.scrollY > 10);
+    }, {passive: true});
+    window.toggleMobileNav = function() {
+      document.getElementById('mobileNav').classList.toggle('open');
+      document.getElementById('mobileToggler').classList.toggle('open');
+    };
+    window.toggleMobileSection = function(btn) {
+      var links = btn.nextElementSibling;
+      var isOpen = links.classList.contains('open');
+      document.querySelectorAll('.mobile-links').forEach(function(l) { l.classList.remove('open'); });
+      document.querySelectorAll('.mobile-section-btn').forEach(function(b) { b.classList.remove('open'); });
+      if (!isOpen) { links.classList.add('open'); btn.classList.add('open'); }
+    };
+    document.querySelectorAll('.mobile-link, .mobile-top-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobileNav').classList.remove('open');
+        document.getElementById('mobileToggler').classList.remove('open');
+      });
+    });
+  })();
+</script>
+
+<div class="seeker-layout">
+  <!-- Sidebar -->
+  <div class="seeker-sidebar">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:70px;height:70px;background:linear-gradient(135deg,#DC3545,#FF6B6B);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:white;margin:0 auto 12px;">🆘</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:800;" id="sidebar-name">My Requests</div>
+      <div style="font-size:0.8rem;color:#4B5563;" id="sidebar-phone">—</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div style="background:#FFF5F5;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:800;color:#DC3545;" id="sidebar-total">0</div>
+        <div style="font-size:0.75rem;color:#4B5563;">Total Requests</div>
+      </div>
+      <div style="background:#F0FFF4;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:800;color:#059669;" id="sidebar-fulfilled">0</div>
+        <div style="font-size:0.75rem;color:#4B5563;">Fulfilled</div>
+      </div>
+    </div>
+
+    <a href="request-blood.html" class="btn-primary-red w-100" style="justify-content:center;margin-bottom:8px;">
+      <i class="bi bi-plus-circle-fill"></i> Post New Request
+    </a>
+    <a href="find-donors.html" class="btn-outline-red w-100" style="justify-content:center;">
+      <i class="bi bi-search"></i> Find Donors
+    </a>
+
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid #F3F4F6;">
+      <p style="font-size:0.8rem;color:#4B5563;line-height:1.6;margin:0;">
+        💡 <strong>Tip:</strong> Also check nearby <a href="blood-banks.html" style="color:#DC3545;font-weight:600;">blood banks</a> for immediate stock availability.
+      </p>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="seeker-main">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+      <div>
+        <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:4px;">My Blood Requests</h2>
+        <p style="color:#4B5563;font-size:0.9rem;margin:0;">Track the status of your active and past requests.</p>
+      </div>
+      <div class="filter-pills">
+        <div class="filter-pill active" onclick="filterRequests('ALL', this)">All</div>
+        <div class="filter-pill" onclick="filterRequests('ACTIVE', this)">Active</div>
+        <div class="filter-pill" onclick="filterRequests('FULFILLED', this)">Fulfilled</div>
+        <div class="filter-pill" onclick="filterRequests('CLOSED', this)">Closed</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-action-grid">
+      <a href="request-blood.html" class="quick-action-card">
+        <div class="quick-action-icon">🆘</div>
+        <div class="quick-action-label">New Emergency Request</div>
+      </a>
+      <a href="find-donors.html" class="quick-action-card">
+        <div class="quick-action-icon">🔍</div>
+        <div class="quick-action-label">Search Donors Now</div>
+      </a>
+      <a href="blood-banks.html" class="quick-action-card">
+        <div class="quick-action-icon">🏥</div>
+        <div class="quick-action-label">Find Blood Banks</div>
+      </a>
+      <a href="donor-register.html" class="quick-action-card">
+        <div class="quick-action-icon">❤️</div>
+        <div class="quick-action-label">Become a Donor</div>
+      </a>
+    </div>
+
+    <!-- Requests List -->
+    <div id="requestsList">
+      <div class="text-center py-5"><div class="loading-spinner"></div><p style="margin-top:16px;color:#4B5563;">Loading your requests...</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal-rs">
+    <div class="modal-header">
+      <h3 class="modal-title">Cancel Request</h3>
+      <button class="modal-close" onclick="document.getElementById('cancelModal').classList.remove('show')">✕</button>
+    </div>
+    <p style="color:#4B5563;margin-bottom:20px;">Are you sure you want to cancel this request? This action cannot be undone.</p>
+    <div class="d-flex gap-3">
+      <button class="btn-primary-red flex-grow-1" id="confirmCancelBtn" style="justify-content:center;background:linear-gradient(135deg,#DC2626,#EF4444);">Yes, Cancel Request</button>
+      <button class="btn-outline-red" onclick="document.getElementById('cancelModal').classList.remove('show')">Keep Active</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { collection, query, where, orderBy, getDocs, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, timeAgo, formatDateTime } from '../js/utils.js';
+
+  let allRequests = [];
+  let cancelTargetId = null;
+  const seekerPhone = localStorage.getItem('raktsetu_seeker_phone') || '+919876543210';
+
+  const MOCK_REQUESTS = [
+    { id:'r1', request_id:'RKT12345678', seeker_name:'Aditya Sharma', seeker_phone:'+919876543210', blood_group_needed:'O-', units_needed:2, hospital_name:'Bombay Hospital', hospital_address:'New Palasia, Indore, MP', urgency_level:'CRITICAL', status:'ACTIVE', created_at:{ toDate:()=>new Date(Date.now()-3600000) }, updated_at:{ toDate:()=>new Date() }, fulfilled_by:null },
+    { id:'r2', request_id:'RKT87654321', seeker_name:'Aditya Sharma', seeker_phone:'+919876543210', blood_group_needed:'A+', units_needed:1, hospital_name:'AIIMS Bhopal', hospital_address:'Saket Nagar, Bhopal, MP', urgency_level:'NORMAL', status:'FULFILLED', created_at:{ toDate:()=>new Date(Date.now()-86400000*3) }, updated_at:{ toDate:()=>new Date(Date.now()-86400000*2) }, fulfilled_by:'City Blood Bank', fulfillment_type:'BLOOD_BANK_STOCK' },
+  ];
+
+  function getStepStatus(req) {
+    const s = req.status;
+    return {
+      posted: 'done',
+      notified: s !== 'CANCELLED' ? 'done' : 'active',
+      response: ['FULFILLED','CLOSED'].includes(s) ? 'done' : (s === 'ACTIVE' ? 'active' : ''),
+      fulfilled: s === 'FULFILLED' ? 'done' : ''
+    };
+  }
+
+  function renderRequests(requests) {
+    const list = document.getElementById('requestsList');
+    if (requests.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>No requests found</h3><p><a href="request-blood.html" style="color:#DC3545;font-weight:600;">Post your first blood request</a></p></div>`;
+      return;
+    }
+    const steps = getStepStatus;
+    list.innerHTML = requests.map(r => {
+      const st = steps(r);
+      const urgencyClass = r.urgency_level?.toLowerCase() || 'normal';
+      const respondingDonors = r.contacted_donors || [];
+      const isPendingConfirmation = r.status === 'PENDING_SEEKER_CONFIRMATION';
+
+      return `
+        <div class="request-tracker-card ${r.status === 'FULFILLED' || r.status === 'COMPLETED' ? 'fulfilled' : r.status === 'CLOSED' ? 'closed' : ''}">
+          <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3">
+              <div class="blood-badge">${r.blood_group_needed}</div>
+              <div>
+                <div style="font-weight:700;font-family:'Poppins',sans-serif;">${r.hospital_name}</div>
+                <div style="font-size:0.82rem;color:#4B5563;">${r.hospital_address}</div>
+                <div style="font-size:0.78rem;color:#4B5563;margin-top:3px;">${r.units_needed} unit(s) • ${timeAgo(r.created_at)}</div>
+              </div>
+            </div>
+            <div class="d-flex flex-column align-items-end gap-1">
+              <span class="urgency-badge ${urgencyClass}">${r.urgency_level}</span>
+              <span style="background:#F3F4F6;color:#636E72;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.5px;margin-top:4px;">
+                ID: ${r.request_id}
+              </span>
+            </div>
+          </div>
+
+          <!-- PENDING SEEKER CONFIRMATION BANNER -->
+          ${isPendingConfirmation ? `
+          <div style="background:linear-gradient(135deg,#FEF3C7,#FFF9E6);border:2px solid #F59E0B;border-radius:14px;padding:18px;margin:16px 0;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+              <span style="font-size:1.5rem;">🩸</span>
+              <div>
+                <div style="font-weight:800;font-family:'Poppins',sans-serif;color:#92400E;">A donor says they helped you!</div>
+                <div style="font-size:0.82rem;color:#B45309;">${respondingDonors[respondingDonors.length-1]?.donor_name || 'A donor'} confirmed donating blood for your request.</div>
+              </div>
+            </div>
+            <div style="font-weight:700;font-size:0.88rem;color:#92400E;margin-bottom:10px;">Did you receive blood?</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button onclick="confirmBloodReceived('${r.id}')" style="background:#059669;color:white;border:none;border-radius:10px;padding:12px 24px;font-weight:700;font-size:0.9rem;cursor:pointer;flex:1;min-width:140px;transition:all 0.2s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+                ✅ Yes, I received blood!
+              </button>
+              <button onclick="denyBloodReceived('${r.id}')" style="background:white;color:#DC2626;border:2px solid #DC2626;border-radius:10px;padding:10px 20px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.2s;">
+                ❌ Not yet
+              </button>
+            </div>
+          </div>` : ''}
+
+          <!-- RESPONDING DONORS LIST -->
+          ${respondingDonors.length > 0 && !isPendingConfirmation ? `
+          <div style="background:#F0FFF4;border-radius:12px;padding:14px 16px;margin:12px 0;">
+            <div style="font-weight:700;font-size:0.85rem;color:#059669;margin-bottom:8px;">
+              💚 ${respondingDonors.length} donor(s) responded to your request
+            </div>
+            ${respondingDonors.map(d => `
+              <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #D1FAE5;font-size:0.85rem;">
+                <span style="width:32px;height:32px;background:#059669;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;flex-shrink:0;">${d.donor_name?.charAt(0)||'D'}</span>
+                <div style="flex:1;"><strong>${d.donor_name}</strong> <span style="color:#636E72;">expressed interest</span></div>
+                <a href="tel:${d.donor_phone}" style="color:#059669;font-weight:600;font-size:0.82rem;"><i class="bi bi-telephone-fill"></i> Call</a>
+              </div>`).join('')}
+          </div>` : ''}
+
+          <!-- FULFILLED BANNER -->
+          ${(r.status === 'FULFILLED' || r.status === 'COMPLETED') ? `
+          <div style="background:#F0FFF4;border-radius:10px;padding:12px 16px;font-size:0.85rem;color:#059669;font-weight:600;margin:12px 0;">
+            ✅ ${r.status === 'COMPLETED' ? 'Completed — Blood received confirmed by you' : 'Fulfilled by: ' + (r.fulfilled_by || 'Blood Bank')}
+            ${r.fulfillment_type ? ' (' + r.fulfillment_type.replace(/_/g,' ') + ')' : ''}
+          </div>` : ''}
+
+          <div class="request-progress">
+            <div class="req-step done"><div class="req-step-dot">✓</div><div class="req-step-label">Posted</div></div>
+            <div class="req-step ${st.notified}"><div class="req-step-dot">${st.notified==='done'?'✓':'2'}</div><div class="req-step-label">Notified</div></div>
+            <div class="req-step ${st.response}"><div class="req-step-dot">${st.response==='done'?'✓':'3'}</div><div class="req-step-label">Response</div></div>
+            <div class="req-step ${st.fulfilled}"><div class="req-step-dot">${st.fulfilled==='done'?'✓':'4'}</div><div class="req-step-label">Completed</div></div>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="find-donors.html?blood=${r.blood_group_needed}" class="btn-outline-red" style="padding:8px 14px;font-size:0.82rem;">
+              <i class="bi bi-search"></i> Find Donors
+            </a>
+            <a href="blood-banks.html" class="btn-outline-red" style="padding:8px 14px;font-size:0.82rem;">
+              <i class="bi bi-building"></i> Blood Banks
+            </a>
+            ${r.status === 'ACTIVE' || r.status === 'DONOR_RESPONDING' ? `
+            <button class="btn-outline-red" style="padding:8px 14px;font-size:0.82rem;border-color:#DC2626;color:#DC2626;" onclick="openCancelModal('${r.id}')">
+              <i class="bi bi-x-circle"></i> Cancel
+            </button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function loadRequests() {
+    try {
+      const q = query(collection(db, 'requests'), where('seeker_phone', '==', seekerPhone), orderBy('created_at', 'desc'));
+      const snap = await getDocs(q);
+      allRequests = snap.empty ? MOCK_REQUESTS : snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch { allRequests = MOCK_REQUESTS; }
+
+    document.getElementById('sidebar-total').textContent = allRequests.length;
+    document.getElementById('sidebar-fulfilled').textContent = allRequests.filter(r => r.status === 'FULFILLED').length;
+    if (allRequests[0]) {
+      document.getElementById('sidebar-name').textContent = allRequests[0].seeker_name || 'My Requests';
+      document.getElementById('sidebar-phone').textContent = allRequests[0].seeker_phone || '—';
+    }
+    renderRequests(allRequests);
+  }
+
+  window.filterRequests = function(status, el) {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    renderRequests(status === 'ALL' ? allRequests : allRequests.filter(r => r.status === status));
+  };
+
+  window.confirmBloodReceived = async function(docId) {
+    try {
+      await updateDoc(doc(db, 'requests', docId), {
+        status: 'COMPLETED',
+        fulfilled_by: 'DONOR_DIRECT',
+        fulfillment_type: 'DONOR_MOBILIZED',
+        fulfilled_at: serverTimestamp(),
+        updated_at: serverTimestamp()
+      });
+      showToast('🎉 So glad you received blood! Request marked Completed.', 'success');
+    } catch {
+      showToast('Marked completed (demo mode). 🎉', 'success');
+    }
+    const idx = allRequests.findIndex(r => r.id === docId);
+    if (idx !== -1) allRequests[idx] = { ...allRequests[idx], status: 'COMPLETED', fulfilled_by: 'DONOR_DIRECT', fulfillment_type: 'DONOR_MOBILIZED' };
+    document.getElementById('sidebar-fulfilled').textContent = allRequests.filter(r => r.status === 'COMPLETED' || r.status === 'FULFILLED').length;
+    renderRequests(allRequests);
+  };
+
+  window.denyBloodReceived = async function(docId) {
+    try {
+      await updateDoc(doc(db, 'requests', docId), {
+        status: 'ACTIVE',
+        updated_at: serverTimestamp()
+      });
+    } catch {}
+    const idx = allRequests.findIndex(r => r.id === docId);
+    if (idx !== -1) allRequests[idx] = { ...allRequests[idx], status: 'ACTIVE' };
+    showToast('Okay, request is still active. Keep searching!', 'info');
+    renderRequests(allRequests);
+  };
+
+  window.openCancelModal = function(id) {
+    cancelTargetId = id;
+    document.getElementById('cancelModal').classList.add('show');
+  };
+
+  document.getElementById('confirmCancelBtn').addEventListener('click', async () => {
+    if (!cancelTargetId) return;
+    try {
+      const idx = allRequests.findIndex(r => r.id === cancelTargetId);
+      if (idx !== -1) allRequests[idx].status = 'CANCELLED';
+      await updateDoc(doc(db, 'requests', cancelTargetId), { status: 'CANCELLED', updated_at: serverTimestamp() });
+      showToast('Request cancelled.', 'info');
+    } catch { showToast('Request cancelled locally.', 'info'); }
+    document.getElementById('cancelModal').classList.remove('show');
+    renderRequests(allRequests);
+    cancelTargetId = null;
+  });
+
+  loadRequests();
+</script>
+<script src="../js/app.js"></script>
+</body>
+</html>

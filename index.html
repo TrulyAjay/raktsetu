@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RaktSetu - Real-Time Blood Donor Network connecting seekers, donors and blood banks across India.">
+  <title>RaktSetu – Real-Time Blood Donor Network</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* Hero */
+    .hero {
+      height: 100vh;
+      min-height: 600px;
+      background: linear-gradient(135deg, #1a0a0a 0%, #2d0c0c 40%, #1a0a0a 100%);
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(220,53,69,0.25) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,107,107,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 60% 80%, rgba(220,53,69,0.1) 0%, transparent 40%);
+    }
+    .hero-content { position: relative; z-index: 2; padding: 40px 0; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(220,53,69,0.2);
+      border: 1px solid rgba(220,53,69,0.4);
+      color: #FF9999;
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 28px;
+      backdrop-filter: blur(10px);
+    }
+    .hero-badge .dot {
+      width: 8px; height: 8px;
+      background: #FF6B6B;
+      border-radius: 50%;
+      animation: pulse-dot 1.5s infinite;
+    }
+    .hero-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      font-weight: 900;
+      color: white;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+    .hero-title .highlight {
+      background: linear-gradient(135deg, #FF6B6B, #DC3545);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.7;
+      max-width: 520px;
+      margin-bottom: 40px;
+    }
+    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 64px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .hero-stat-number {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: white;
+      line-height: 1;
+    }
+    .hero-stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.55); margin-top: 4px; }
+    /* Blood drop animation */
+    .hero-visual { position: relative; display: flex; align-items: center; justify-content: center; }
+    .blood-drop-big {
+      width: 320px; height: 380px;
+      background: linear-gradient(160deg, rgba(220,53,69,0.6), rgba(176,0,32,0.8));
+      clip-path: polygon(50% 0%, 100% 60%, 85% 100%, 15% 100%, 0% 60%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: float 4s ease-in-out infinite;
+      filter: drop-shadow(0 20px 60px rgba(220,53,69,0.5));
+    }
+    .blood-drop-big::after {
+      content: '🩸';
+      font-size: 5rem;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    .floating-cards {
+      position: absolute;
+      inset: -40px;
+    }
+    .float-card {
+      position: absolute;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: float 3s ease-in-out infinite;
+      white-space: nowrap;
+    }
+    .float-card:nth-child(1) { top: 10%; left: -30px; animation-delay: 0s; }
+    .float-card:nth-child(2) { top: 35%; right: -20px; animation-delay: 1s; }
+    .float-card:nth-child(3) { bottom: 20%; left: -20px; animation-delay: 2s; }
+    .float-card .pulse { width: 8px; height: 8px; background: #00B894; border-radius: 50%; animation: pulse-dot 1s infinite; flex-shrink: 0; }
+    .float-card .pulse.red { background: #FF6B6B; }
+
+    /* How It Works */
+    .how-section { padding: 68px 0; background: white; }
+    .section-tag {
+      display: inline-block;
+      background: #FFF5F5;
+      color: #DC3545;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 5px 14px;
+      border-radius: 50px;
+      margin-bottom: 14px;
+    }
+    .section-title { font-size: clamp(1.5rem, 2.8vw, 2.1rem); font-weight: 800; margin-bottom: 12px; }
+    .step-card {
+      text-align: center;
+      padding: 32px 20px;
+      border-radius: 16px;
+      transition: all 0.25s ease;
+    }
+    .step-card:hover { background: #FFF5F5; transform: translateY(-6px); }
+    .step-number {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #DC3545, #FF6B6B);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.15rem; font-weight: 800;
+      margin: 0 auto 16px;
+      box-shadow: 0 6px 16px rgba(220,53,69,0.30);
+    }
+    .step-icon { font-size: 2.2rem; margin-bottom: 12px; }
+    .step-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 0.86rem; color: #4B5563; line-height: 1.6; }
+
+    /* Features */
+    .features-section { padding: 68px 0; background: #F8FAFC; }
+    .feature-card {
+      background: white;
+      border-radius: 16px;
+      padding: 26px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: all 0.25s ease;
+      height: 100%;
+      border: 1.5px solid transparent;
+    }
+    .feature-card:hover { border-color: #DC3545; transform: translateY(-4px); box-shadow: 0 8px 28px rgba(220,53,69,0.12); }
+    .feature-icon {
+      width: 52px; height: 52px;
+      background: #FFF5F5;
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+    }
+    .feature-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 0.84rem; color: #4B5563; line-height: 1.6; }
+
+    /* CTA Section */
+    .cta-section {
+      padding: 72px 0;
+      background: linear-gradient(135deg, #DC3545, #b71c1c);
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .cta-title { font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 900; color: white; margin-bottom: 16px; }
+    .cta-subtitle { font-size: 1rem; color: rgba(255,255,255,0.85); margin-bottom: 32px; }
+    .btn-white {
+      background: white; color: #DC3545; border: none;
+      padding: 12px 28px; border-radius: 12px;
+      font-weight: 700; font-size: 0.95rem; cursor: pointer;
+      transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.22); color: #DC3545; }
+    .btn-white:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(0,0,0,0.25); color: #DC3545; }
+    .btn-outline-white {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.6);
+      padding: 12px 30px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-outline-white:hover { background: rgba(255,255,255,0.15); border-color: white; color: white; }
+
+    /* Testimonial */
+    .testimonial-section { padding: 80px 0; background: white; }
+    .testimonial-card {
+      background: #F8FAFC;
+      border-radius: 20px;
+      padding: 32px;
+      border-left: 4px solid #DC3545;
+    }
+    .testimonial-text { font-size: 1rem; color: #1E2328; line-height: 1.7; font-style: italic; margin-bottom: 20px; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-avatar {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #DC3545, #FF6B6B);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-family: 'Poppins', sans-serif;
+    }
+    .testimonial-name { font-weight: 700; font-size: 0.95rem; }
+    .testimonial-role { font-size: 0.8rem; color: #4B5563; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<link rel="stylesheet" href="css/navbar.css">
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="index.html">🩸 Rakt<span>Setu</span></a>
+    <ul class="rks-nav">
+
+      <li class="nav-item">
+        <a class="nav-top-link active" href="index.html">Home</a>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Seeker <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="pages/request-blood.html">
+            <div class="dropdown-icon">🆘</div>
+            <div class="dropdown-text"><span class="dropdown-label">Request Blood</span><span class="dropdown-desc">Post an urgent blood request</span></div>
+          </a>
+          <a class="dropdown-link" href="pages/find-donors.html">
+            <div class="dropdown-icon">🔍</div>
+            <div class="dropdown-text"><span class="dropdown-label">Find Donors</span><span class="dropdown-desc">Search verified donors nearby</span></div>
+          </a>
+          <a class="dropdown-link" href="pages/blood-banks.html">
+            <div class="dropdown-icon">🏥</div>
+            <div class="dropdown-text"><span class="dropdown-label">Blood Banks</span><span class="dropdown-desc">Check live inventory near you</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="pages/seeker-dashboard.html">
+            <div class="dropdown-icon">📋</div>
+            <div class="dropdown-text"><span class="dropdown-label">Track My Request</span><span class="dropdown-desc">View your active requests</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Donor <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="pages/donor-register.html">
+            <div class="dropdown-icon">❤️</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register</span><span class="dropdown-desc">Join as a verified donor</span></div>
+          </a>
+          <a class="dropdown-link" href="pages/donor-dashboard.html">
+            <div class="dropdown-icon">📊</div>
+            <div class="dropdown-text"><span class="dropdown-label">My Dashboard</span><span class="dropdown-desc">Track donations & availability</span></div>
+          </a>
+          <a class="dropdown-link" href="pages/donor-confirm.html">
+            <div class="dropdown-icon">✅</div>
+            <div class="dropdown-text"><span class="dropdown-label">Confirm Donation</span><span class="dropdown-desc">Verify using Tracking ID</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item nav-item-last">
+        <button class="nav-top-link" aria-haspopup="true">
+          Blood Bank <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown nav-dropdown-right">
+          <a class="dropdown-link" href="bloodbank-portal/login.html">
+            <div class="dropdown-icon">🔐</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Login</span><span class="dropdown-desc">Sign in to your blood bank</span></div>
+          </a>
+          <a class="dropdown-link" href="bloodbank-portal/bloodbank-register.html">
+            <div class="dropdown-icon">🏦</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register Blood Bank</span><span class="dropdown-desc">Join the RaktSetu network</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="bloodbank-portal/dashboard.html">
+            <div class="dropdown-icon">📈</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Dashboard</span><span class="dropdown-desc">Manage inventory & requests</span></div>
+          </a>
+        </div>
+      </li>
+
+    </ul>
+    <button class="navbar-toggler" id="mobileToggler" onclick="toggleMobileNav()" aria-label="Menu">
+      <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
+    </button>
+  </div>
+</nav>
+
+<div class="navbar-mobile" id="mobileNav">
+  <a class="mobile-top-link active" href="index.html">🏠 Home</a>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Seeker <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="pages/request-blood.html"><span class="mobile-link-icon">🆘</span> Request Blood</a>
+      <a class="mobile-link" href="pages/find-donors.html"><span class="mobile-link-icon">🔍</span> Find Donors</a>
+      <a class="mobile-link" href="pages/blood-banks.html"><span class="mobile-link-icon">🏥</span> Blood Banks</a>
+      <a class="mobile-link" href="pages/seeker-dashboard.html"><span class="mobile-link-icon">📋</span> Track My Request</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Donor <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="pages/donor-register.html"><span class="mobile-link-icon">❤️</span> Register</a>
+      <a class="mobile-link" href="pages/donor-dashboard.html"><span class="mobile-link-icon">📊</span> My Dashboard</a>
+      <a class="mobile-link" href="pages/donor-confirm.html"><span class="mobile-link-icon">✅</span> Confirm Donation</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Blood Bank <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="bloodbank-portal/login.html"><span class="mobile-link-icon">🔐</span> Portal Login</a>
+      <a class="mobile-link" href="bloodbank-portal/bloodbank-register.html"><span class="mobile-link-icon">🏦</span> Register Blood Bank</a>
+      <a class="mobile-link" href="bloodbank-portal/dashboard.html"><span class="mobile-link-icon">📈</span> Portal Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    window.addEventListener('scroll', function() {
+      var nb = document.getElementById('mainNavbar');
+      if (nb) nb.classList.toggle('scrolled', window.scrollY > 10);
+    }, {passive: true});
+    window.toggleMobileNav = function() {
+      document.getElementById('mobileNav').classList.toggle('open');
+      document.getElementById('mobileToggler').classList.toggle('open');
+    };
+    window.toggleMobileSection = function(btn) {
+      var links = btn.nextElementSibling;
+      var isOpen = links.classList.contains('open');
+      document.querySelectorAll('.mobile-links').forEach(function(l) { l.classList.remove('open'); });
+      document.querySelectorAll('.mobile-section-btn').forEach(function(b) { b.classList.remove('open'); });
+      if (!isOpen) { links.classList.add('open'); btn.classList.add('open'); }
+    };
+    document.querySelectorAll('.mobile-link, .mobile-top-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobileNav').classList.remove('open');
+        document.getElementById('mobileToggler').classList.remove('open');
+      });
+    });
+  })();
+</script>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 hero-content">
+        <div class="hero-badge">
+          <div class="dot"></div>
+          Live Network Active Across India
+        </div>
+        <h1 class="hero-title">
+          Connecting <span class="highlight">Blood Donors</span><br>
+          When It Matters Most
+        </h1>
+        <p class="hero-subtitle">
+          RaktSetu bridges the gap between blood seekers, donors, and blood banks in real-time.
+          Every second counts. Every drop saves a life.
+        </p>
+        <div class="hero-cta">
+          <a href="donor-register.html" class="btn-primary-red" style="padding:14px 32px;font-size:1rem;">
+            <i class="bi bi-heart-fill"></i> Register as Donor
+          </a>
+          <a href="request-blood.html" class="btn-outline-red" style="padding:12px 30px;font-size:1rem;background:transparent;color:white;border-color:rgba(255,255,255,0.5);">
+            <i class="bi bi-droplet-fill"></i> Need Blood?
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-number" id="counter-donors">0</div>
+            <div class="hero-stat-label">Registered Donors</div>
+          </div>
+          <div>
+            <div class="hero-stat-number" id="counter-lives">0</div>
+            <div class="hero-stat-label">Lives Saved</div>
+          </div>
+          <div>
+            <div class="hero-stat-number" id="counter-banks">0</div>
+            <div class="hero-stat-label">Blood Banks</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-block">
+        <div class="hero-visual" style="height:500px;">
+          <div class="blood-drop-big"></div>
+          <div class="floating-cards">
+            <div class="float-card">
+              <div class="pulse"></div>
+              Rahul S. — O+ Available in Indore
+            </div>
+            <div class="float-card">
+              <div class="pulse red"></div>
+              CRITICAL: A- needed at Bombay Hospital
+            </div>
+            <div class="float-card">
+              <div class="pulse"></div>
+              City Blood Bank — 12 units B+ in stock
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Action Bar -->
+<section style="background:white;padding:32px 0;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+  <div class="container">
+    <div class="row g-3 align-items-center">
+      <div class="col-12 col-md-4">
+        <a href="find-donors.html" class="d-flex align-items-center gap-3 p-4 rounded-3" style="background:#FFF5F5;text-decoration:none;transition:all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="width:48px;height:48px;background:#DC3545;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">🔍</div>
+          <div>
+            <div style="font-weight:700;font-family:'Poppins',sans-serif;">Find Donors</div>
+            <div style="font-size:0.82rem;color:#636E72;">Search by blood group & city</div>
+          </div>
+          <i class="bi bi-arrow-right ms-auto text-muted"></i>
+        </a>
+      </div>
+      <div class="col-12 col-md-4">
+        <a href="request-blood.html" class="d-flex align-items-center gap-3 p-4 rounded-3" style="background:#FFF5F5;text-decoration:none;transition:all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="width:48px;height:48px;background:#DC3545;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">🆘</div>
+          <div>
+            <div style="font-weight:700;font-family:'Poppins',sans-serif;">Request Blood</div>
+            <div style="font-size:0.82rem;color:#636E72;">Post an urgent blood request</div>
+          </div>
+          <i class="bi bi-arrow-right ms-auto text-muted"></i>
+        </a>
+      </div>
+      <div class="col-12 col-md-4">
+        <a href="blood-banks.html" class="d-flex align-items-center gap-3 p-4 rounded-3" style="background:#FFF5F5;text-decoration:none;transition:all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="width:48px;height:48px;background:#DC3545;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">🏥</div>
+          <div>
+            <div style="font-weight:700;font-family:'Poppins',sans-serif;">Blood Banks</div>
+            <div style="font-size:0.82rem;color:#636E72;">Check live inventory near you</div>
+          </div>
+          <i class="bi bi-arrow-right ms-auto text-muted"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-tag">How It Works</span>
+      <h2 class="section-title">Simple. Fast. Life-Saving.</h2>
+      <p style="color:#4B5563;max-width:500px;margin:0 auto;">Three easy steps to connect you with the blood you need, or help you donate to save a life.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-icon">📝</div>
+          <h3 class="step-title">Register / Post Request</h3>
+          <p class="step-desc">Donors register with their blood group and location. Seekers post emergency requests with hospital details and urgency level.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-icon">🔗</div>
+          <h3 class="step-title">Smart Matching</h3>
+          <p class="step-desc">Our algorithm instantly matches seekers with the most compatible, available donors and nearest blood banks in real-time.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-icon">❤️</div>
+          <h3 class="step-title">Connect & Save</h3>
+          <p class="step-desc">Donors receive notifications, confirm availability, and head to the hospital. Every donation is verified and rewarded.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-tag">Why RaktSetu</span>
+      <h2 class="section-title">Built for Every Emergency</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4 col-sm-6">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Real-Time Updates</h3>
+          <p class="feature-desc">Live Firestore sync means donor availability and blood bank inventory update instantly — no stale data in critical moments.</p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <h3 class="feature-title">Smart Donor Matching</h3>
+          <p class="feature-desc">Our matching algorithm scores donors on blood group, availability, donation history, and proximity for best matches first.</p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="feature-card">
+          <div class="feature-icon">🏥</div>
+          <h3 class="feature-title">Blood Bank Portal</h3>
+          <p class="feature-desc">Dedicated portal for blood banks to manage inventory, verify donations, respond to requests and track analytics.</p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="feature-card">
+          <div class="feature-icon">🔔</div>
+          <h3 class="feature-title">Instant Notifications</h3>
+          <p class="feature-desc">Donors near a critical request get notified immediately. Blood banks get alerted for emergency fulfillment.</p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <h3 class="feature-title">Donor Gamification</h3>
+          <p class="feature-desc">Earn badges, climb the leaderboard, and get verified donation certificates. Being a hero should feel like one.</p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Analytics Dashboard</h3>
+          <p class="feature-desc">Blood banks get powerful analytics — fulfillment rates, response times, inventory trends and donor leaderboards.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonial-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-tag">Stories</span>
+      <h2 class="section-title">Lives Connected, Lives Saved</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <p class="testimonial-text">"My mother needed O- blood urgently. RaktSetu showed me 3 compatible donors within 5km in minutes. We found blood within 40 minutes."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">A</div>
+            <div>
+              <div class="testimonial-name">Aditya Sharma</div>
+              <div class="testimonial-role">Blood Seeker, Indore</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <p class="testimonial-text">"I've donated 8 times through RaktSetu. The notifications, the dashboard, the certificates — it makes the whole process smooth and rewarding."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">P</div>
+            <div>
+              <div class="testimonial-name">Priya Singh</div>
+              <div class="testimonial-role">Regular Donor, Bhopal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <p class="testimonial-text">"As a blood bank manager, RaktSetu's portal has transformed how we track requests. Our fulfillment rate improved by 40% in one month."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">R</div>
+            <div>
+              <div class="testimonial-name">Dr. Rajan Mehta</div>
+              <div class="testimonial-role">Blood Bank Manager, Mumbai</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container text-center" style="position:relative;z-index:2;">
+    <h2 class="cta-title">Ready to Save a Life Today?</h2>
+    <p class="cta-subtitle">Join thousands of donors across India making a difference one drop at a time.</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="donor-register.html" class="btn-white">
+        <i class="bi bi-heart-fill"></i> Register as Donor
+      </a>
+      <a href="bloodbank-portal/login.html" class="btn-outline-white">
+        <i class="bi bi-building"></i> Blood Bank Portal
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="footer-brand">🩸 RaktSetu</div>
+        <p class="footer-text">Real-Time Blood Donor Network connecting seekers, donors, and blood banks across India. Because every second counts.</p>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h6 style="color:rgba(255,255,255,0.9);font-weight:700;margin-bottom:16px;">For Donors</h6>
+        <a href="donor-register.html" class="footer-link">Register</a>
+        <a href="donor-dashboard.html" class="footer-link">My Dashboard</a>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h6 style="color:rgba(255,255,255,0.9);font-weight:700;margin-bottom:16px;">For Seekers</h6>
+        <a href="request-blood.html" class="footer-link">Request Blood</a>
+        <a href="find-donors.html" class="footer-link">Find Donors</a>
+        <a href="blood-banks.html" class="footer-link">Blood Banks</a>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h6 style="color:rgba(255,255,255,0.9);font-weight:700;margin-bottom:16px;">Blood Banks</h6>
+        <a href="bloodbank-portal/login.html" class="footer-link">Portal Login</a>
+        <a href="bloodbank-portal/dashboard.html" class="footer-link">Dashboard</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 RaktSetu. Made with ❤️ to save lives across India.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Animated counters
+  function animateCounter(id, target, suffix = "+") {
+    const el = document.getElementById(id);
+    let current = 0;
+    const increment = target / 80;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = Math.floor(current).toLocaleString("en-IN") + suffix;
+    }, 20);
+  }
+
+  // Trigger on scroll into view
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter("counter-donors", 2847);
+        animateCounter("counter-lives", 1203);
+        animateCounter("counter-banks", 48);
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  observer.observe(document.getElementById("counter-donors"));
+</script>
+<script src="js/app.js"></script>
+</body>
+</html>

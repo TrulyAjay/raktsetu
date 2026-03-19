@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Donor dashboard on RaktSetu - manage your donations, availability and impact.">
+  <title>Donor Dashboard – RaktSetu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+    <style>
+    .dashboard-layout { display:grid; grid-template-columns:270px 1fr; height:calc(100vh - 64px); overflow:hidden; }
+    .donor-sidebar { background:white; border-right:1px solid #E5E7EB; padding:22px 18px; height:100%; overflow-y:auto; overflow-x:hidden; }
+    .dashboard-main { background:#F8FAFC; padding:28px 24px; overflow-y:auto; overflow-x:hidden; height:100%; }
+    .donor-profile-card { text-align:center; margin-bottom:24px; }
+    .donor-avatar { width:72px; height:72px; background:linear-gradient(135deg,#DC3545,#FF6B6B); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; font-size:1.8rem; font-weight:800; color:white; margin:0 auto 12px; box-shadow:0 6px 18px rgba(220,53,69,0.30); }
+    .donor-name-display { font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:3px; }
+    .donor-id-display { font-size:0.72rem; color:#4B5563; margin-bottom:10px; }
+    .donor-blood-display { display:inline-block; background:linear-gradient(135deg,#DC3545,#FF6B6B); color:white; font-family:'Poppins',sans-serif; font-weight:900; font-size:1.1rem; padding:5px 18px; border-radius:20px; box-shadow:0 3px 10px rgba(220,53,69,0.28); }
+    .sidebar-nav { display:flex; flex-direction:column; gap:2px; margin-top:20px; }
+    .sidebar-nav-item { display:flex; align-items:center; gap:9px; padding:10px 13px; border-radius:9px; font-size:0.86rem; font-weight:500; cursor:pointer; transition:all 0.16s; color:#4B5563; border:none; background:none; width:100%; text-align:left; }
+    .sidebar-nav-item:hover { background:#F3F4F6; color:#1E2328; }
+    .sidebar-nav-item.active { background:#FFF5F5; color:#DC3545; font-weight:700; }
+    .sidebar-nav-item i { width:18px; text-align:center; font-size:0.95rem; }
+    .availability-section { background:linear-gradient(135deg,#DC3545,#FF6B6B); border-radius:14px; padding:18px; color:white; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .availability-label { font-weight:700; font-size:0.9rem; margin-bottom:2px; }
+    .availability-sublabel { font-size:0.74rem; opacity:0.84; }
+    .stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:24px; }
+    .section-title-dash { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+    .badge-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .badge-item { background:white; border-radius:12px; padding:16px; text-align:center; box-shadow:0 1px 6px rgba(0,0,0,0.06); border:1px solid #E5E7EB; transition:all 0.18s; }
+    .badge-item:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,0.08); }
+    .badge-item.locked { opacity:0.38; filter:grayscale(1); }
+    .badge-icon { font-size:2rem; margin-bottom:7px; }
+    .badge-name { font-size:0.78rem; font-weight:700; margin-bottom:2px; }
+    .badge-desc { font-size:0.68rem; color:#4B5563; }
+    .donation-item { background:white; border-radius:11px; padding:16px 18px; display:flex; align-items:center; gap:14px; margin-bottom:10px; box-shadow:0 1px 6px rgba(0,0,0,0.06); border:1px solid #E5E7EB; transition:transform 0.18s; }
+    .donation-item:hover { transform:translateX(3px); }
+    .donation-date-badge { background:#FFF5F5; color:#DC3545; font-family:'Poppins',sans-serif; font-weight:800; font-size:0.8rem; padding:9px 12px; border-radius:9px; text-align:center; min-width:58px; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; animation:fadeIn 0.22s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:992px) { .dashboard-layout{grid-template-columns:1fr} .donor-sidebar{position:relative;height:auto;top:0;border-right:none;border-bottom:1px solid #E5E7EB;padding:18px} .dashboard-main{padding:20px 16px} }
+    @media(max-width:576px) { .stats-grid{grid-template-columns:1fr 1fr} .badge-grid{grid-template-columns:repeat(3,1fr)} }
+  </style>
+</head>
+<body>
+
+<link rel="stylesheet" href="../css/navbar.css">
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../index.html">🩸 Rakt<span>Setu</span></a>
+    <ul class="rks-nav">
+
+      <li class="nav-item">
+        <a class="nav-top-link" href="../index.html">Home</a>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Seeker <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="request-blood.html">
+            <div class="dropdown-icon">🆘</div>
+            <div class="dropdown-text"><span class="dropdown-label">Request Blood</span><span class="dropdown-desc">Post an urgent blood request</span></div>
+          </a>
+          <a class="dropdown-link" href="find-donors.html">
+            <div class="dropdown-icon">🔍</div>
+            <div class="dropdown-text"><span class="dropdown-label">Find Donors</span><span class="dropdown-desc">Search verified donors nearby</span></div>
+          </a>
+          <a class="dropdown-link" href="blood-banks.html">
+            <div class="dropdown-icon">🏥</div>
+            <div class="dropdown-text"><span class="dropdown-label">Blood Banks</span><span class="dropdown-desc">Check live inventory near you</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="seeker-dashboard.html">
+            <div class="dropdown-icon">📋</div>
+            <div class="dropdown-text"><span class="dropdown-label">Track My Request</span><span class="dropdown-desc">View your active requests</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Donor <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="donor-register.html">
+            <div class="dropdown-icon">❤️</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register</span><span class="dropdown-desc">Join as a verified donor</span></div>
+          </a>
+          <a class="dropdown-link active" href="donor-dashboard.html">
+            <div class="dropdown-icon">📊</div>
+            <div class="dropdown-text"><span class="dropdown-label">My Dashboard</span><span class="dropdown-desc">Track donations & availability</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-confirm.html">
+            <div class="dropdown-icon">✅</div>
+            <div class="dropdown-text"><span class="dropdown-label">Confirm Donation</span><span class="dropdown-desc">Verify using Tracking ID</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item nav-item-last">
+        <button class="nav-top-link" aria-haspopup="true">
+          Blood Bank <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown nav-dropdown-right">
+          <a class="dropdown-link" href="../bloodbank-portal/login.html">
+            <div class="dropdown-icon">🔐</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Login</span><span class="dropdown-desc">Sign in to your blood bank</span></div>
+          </a>
+          <a class="dropdown-link" href="../bloodbank-portal/bloodbank-register.html">
+            <div class="dropdown-icon">🏦</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register Blood Bank</span><span class="dropdown-desc">Join the RaktSetu network</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="../bloodbank-portal/dashboard.html">
+            <div class="dropdown-icon">📈</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Dashboard</span><span class="dropdown-desc">Manage inventory & requests</span></div>
+          </a>
+        </div>
+      </li>
+
+    </ul>
+    <button class="navbar-toggler" id="mobileToggler" onclick="toggleMobileNav()" aria-label="Menu">
+      <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
+    </button>
+  </div>
+</nav>
+
+<div class="navbar-mobile" id="mobileNav">
+  <a class="mobile-top-link" href="../index.html">🏠 Home</a>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Seeker <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="request-blood.html"><span class="mobile-link-icon">🆘</span> Request Blood</a>
+      <a class="mobile-link" href="find-donors.html"><span class="mobile-link-icon">🔍</span> Find Donors</a>
+      <a class="mobile-link" href="blood-banks.html"><span class="mobile-link-icon">🏥</span> Blood Banks</a>
+      <a class="mobile-link" href="seeker-dashboard.html"><span class="mobile-link-icon">📋</span> Track My Request</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Donor <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="donor-register.html"><span class="mobile-link-icon">❤️</span> Register</a>
+      <a class="mobile-link active" href="donor-dashboard.html"><span class="mobile-link-icon">📊</span> My Dashboard</a>
+      <a class="mobile-link" href="donor-confirm.html"><span class="mobile-link-icon">✅</span> Confirm Donation</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Blood Bank <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="../bloodbank-portal/login.html"><span class="mobile-link-icon">🔐</span> Portal Login</a>
+      <a class="mobile-link" href="../bloodbank-portal/bloodbank-register.html"><span class="mobile-link-icon">🏦</span> Register Blood Bank</a>
+      <a class="mobile-link" href="../bloodbank-portal/dashboard.html"><span class="mobile-link-icon">📈</span> Portal Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    window.addEventListener('scroll', function() {
+      var nb = document.getElementById('mainNavbar');
+      if (nb) nb.classList.toggle('scrolled', window.scrollY > 10);
+    }, {passive: true});
+    window.toggleMobileNav = function() {
+      document.getElementById('mobileNav').classList.toggle('open');
+      document.getElementById('mobileToggler').classList.toggle('open');
+    };
+    window.toggleMobileSection = function(btn) {
+      var links = btn.nextElementSibling;
+      var isOpen = links.classList.contains('open');
+      document.querySelectorAll('.mobile-links').forEach(function(l) { l.classList.remove('open'); });
+      document.querySelectorAll('.mobile-section-btn').forEach(function(b) { b.classList.remove('open'); });
+      if (!isOpen) { links.classList.add('open'); btn.classList.add('open'); }
+    };
+    document.querySelectorAll('.mobile-link, .mobile-top-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobileNav').classList.remove('open');
+        document.getElementById('mobileToggler').classList.remove('open');
+      });
+    });
+  })();
+</script>
+
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <div class="donor-sidebar">
+    <div class="donor-profile-card">
+      <div class="donor-avatar" id="donor-avatar">?</div>
+      <div class="donor-name-display" id="donor-name-display">Loading...</div>
+      <div class="donor-id-display" id="donor-id-display">ID: —</div>
+      <div class="donor-blood-display" id="donor-blood-display">—</div>
+    </div>
+
+    <div class="availability-section">
+      <div>
+        <div class="availability-label" id="avail-label">Available to Donate</div>
+        <div class="availability-sublabel" id="avail-sublabel">Toggle your availability</div>
+      </div>
+      <div class="toggle-big" id="availToggle" onclick="toggleAvailability()"></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="sidebar-nav-item active" onclick="switchTab('overview', this)">
+        <i class="bi bi-grid-fill"></i> Overview
+      </button>
+      <button class="sidebar-nav-item" onclick="switchTab('donations', this)">
+        <i class="bi bi-droplet-fill"></i> Donation History
+      </button>
+      <button class="sidebar-nav-item" onclick="switchTab('badges', this)">
+        <i class="bi bi-trophy-fill"></i> Badges & Rewards
+      </button>
+      <button class="sidebar-nav-item" onclick="switchTab('requests', this)">
+        <i class="bi bi-bell-fill"></i> Active Requests Near Me
+      </button>
+      <button class="sidebar-nav-item" onclick="switchTab('profile', this)">
+        <i class="bi bi-person-fill"></i> Edit Profile
+      </button>
+    </nav>
+
+    <div style="margin-top:auto;padding-top:24px;border-top:1px solid #F3F4F6;margin-top:24px;">
+      <a href="../index.html" class="sidebar-nav-item" style="display:flex;">
+        <i class="bi bi-house-fill"></i> Back to Home
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="dashboard-main">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+          <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:4px;">Welcome back! 👋</h2>
+          <p style="color:#4B5563;font-size:0.9rem;margin:0;">Here's your donation impact at a glance.</p>
+        </div>
+        <div id="eligibility-banner" style="background:#D1FAE5;color:#059669;padding:10px 18px;border-radius:10px;font-weight:700;font-size:0.88rem;display:none;">
+          ✅ You're eligible to donate today!
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon red">💉</div>
+          <div><div class="stat-value" id="stat-total-donations">0</div><div class="stat-label">Total Donations</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">❤️</div>
+          <div><div class="stat-value" id="stat-lives-saved">0</div><div class="stat-label">Lives Impacted</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">📅</div>
+          <div><div class="stat-value" id="stat-days-since">—</div><div class="stat-label">Days Since Last</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">⏳</div>
+          <div><div class="stat-value" id="stat-days-left">—</div><div class="stat-label">Days Until Eligible</div></div>
+        </div>
+      </div>
+
+      <!-- Eligibility Progress -->
+      <div class="card-rs mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h3 class="section-title-dash" style="margin:0;">Donation Eligibility</h3>
+          <span id="eligibility-tag" class="status-badge active">Checking...</span>
+        </div>
+        <p style="font-size:0.88rem;color:#4B5563;margin-bottom:12px;">Minimum 90 days must pass between donations. </p>
+        <div class="progress-rs">
+          <div class="progress-fill green" id="eligibility-fill" style="width:0%;"></div>
+        </div>
+        <div class="d-flex justify-content-between mt-2" style="font-size:0.78rem;color:#4B5563;">
+          <span>Last donation</span>
+          <span id="eligibility-label">Loading...</span>
+          <span>90 days</span>
+        </div>
+      </div>
+
+      <!-- Recent notifications / active requests -->
+      <div class="card-rs">
+        <h3 class="section-title-dash">🔔 Recent Notifications</h3>
+        <div id="notifications-list">
+          <div class="empty-state" style="padding:30px 0;">
+            <div class="empty-icon" style="font-size:2rem;">🔔</div>
+            <h3>No notifications yet</h3>
+            <p style="font-size:0.85rem;">You'll get notified when someone nearby needs your blood group.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DONATIONS TAB -->
+    <div class="tab-panel" id="tab-donations">
+      <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">Donation History</h2>
+      <p style="color:#4B5563;margin-bottom:24px;font-size:0.9rem;">Every verified donation earns a certificate.</p>
+      <div id="donations-list">
+        <div class="empty-state">
+          <div class="empty-icon">💉</div>
+          <h3>No donations yet</h3>
+          <p>Your verified donations will appear here. <a href="blood-banks.html" style="color:#DC3545;font-weight:600;">Find a blood bank near you.</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BADGES TAB -->
+    <div class="tab-panel" id="tab-badges">
+      <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">Badges & Rewards</h2>
+      <p style="color:#4B5563;margin-bottom:24px;font-size:0.9rem;">Earn badges by donating more. Each donation brings you closer to the next badge.</p>
+      <div class="badge-grid" id="badges-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- NEARBY REQUESTS TAB -->
+    <div class="tab-panel" id="tab-requests">
+      <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">Active Requests Near You</h2>
+      <p style="color:#4B5563;margin-bottom:24px;font-size:0.9rem;">Real-time blood requests matching your blood group.</p>
+      <div id="nearby-requests-list">
+        <div class="text-center py-5"><div class="loading-spinner"></div><p style="margin-top:16px;color:#4B5563;">Loading requests...</p></div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-panel" id="tab-profile">
+      <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">Edit Profile</h2>
+      <p style="color:#4B5563;margin-bottom:24px;font-size:0.9rem;">Keep your information up to date so seekers can reach you.</p>
+      <div class="card-rs" style="max-width:600px;">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="edit-name" class="form-control-rs" placeholder="Your name">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="tel" id="edit-phone" class="form-control-rs" placeholder="+91XXXXXXXXXX" disabled>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input type="text" id="edit-city" class="form-control-rs" placeholder="Your city">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Last Donation Date</label>
+              <input type="date" id="edit-last-donation" class="form-control-rs">
+            </div>
+          </div>
+          <div class="col-12">
+            <button class="btn-primary-red" onclick="saveProfile()" id="saveProfileBtn">
+              <i class="bi bi-check-circle-fill"></i> Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import { doc, getDoc, updateDoc, collection, query, where, orderBy, getDocs, onSnapshot, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, daysUntilEligible, formatDate, timeAgo, setLoading } from '../js/utils.js';
+
+  let donorData = null;
+  let donorId = localStorage.getItem('raktsetu_donor_id');
+
+  // Mock donor for demo
+  const MOCK_DONOR = {
+    id: 'demo123',
+    name: 'Rahul Sharma',
+    phone: '+91 98765 43210',
+    blood_group: 'O+',
+    city: 'Indore',
+    state: 'MP',
+    available: true,
+    total_donations: 7,
+    last_donation_date: '2024-10-15',
+    created_at: { toDate: () => new Date('2023-01-15') }
+  };
+
+  const BADGES_CONFIG = [
+    { id:'first', icon:'🩸', name:'First Drop', desc:'Complete your first donation', required:1 },
+    { id:'triple', icon:'🌟', name:'Triple Hero', desc:'Donate 3 times', required:3 },
+    { id:'five', icon:'🔥', name:'Fire Donor', desc:'Donate 5 times', required:5 },
+    { id:'ten', icon:'💎', name:'Diamond Donor', desc:'Donate 10 times', required:10 },
+    { id:'fifteen', icon:'🏆', name:'Legend', desc:'Donate 15 times', required:15 },
+    { id:'twenty', icon:'👑', name:'Blood King/Queen', desc:'Donate 20 times', required:20 },
+  ];
+
+  async function loadDonor() {
+    try {
+      if (donorId) {
+        const snap = await getDoc(doc(db, 'donors', donorId));
+        donorData = snap.exists() ? { id: snap.id, ...snap.data() } : MOCK_DONOR;
+      } else {
+        donorData = MOCK_DONOR;
+      }
+    } catch {
+      donorData = MOCK_DONOR;
+    }
+    renderDonorProfile();
+    loadNearbyRequests();
+  }
+
+  function renderDonorProfile() {
+    const d = donorData;
+    document.getElementById('donor-avatar').textContent = d.name?.charAt(0).toUpperCase() || '?';
+    document.getElementById('donor-name-display').textContent = d.name;
+    document.getElementById('donor-id-display').textContent = 'ID: ' + (d.id?.slice(0,12) || '—');
+    document.getElementById('donor-blood-display').textContent = d.blood_group;
+
+    // Edit profile prefill
+    document.getElementById('edit-name').value = d.name || '';
+    document.getElementById('edit-phone').value = d.phone || '';
+    document.getElementById('edit-city').value = d.city || '';
+    if (d.last_donation_date) document.getElementById('edit-last-donation').value = d.last_donation_date;
+
+    // Stats
+    document.getElementById('stat-total-donations').textContent = d.total_donations || 0;
+    document.getElementById('stat-lives-saved').textContent = (d.total_donations || 0) * 3;
+
+    const daysLeft = daysUntilEligible(d.last_donation_date);
+    const daysSince = d.last_donation_date
+      ? Math.floor((new Date() - new Date(d.last_donation_date)) / (1000*60*60*24))
+      : null;
+
+    document.getElementById('stat-days-since').textContent = daysSince !== null ? daysSince + 'd' : '—';
+    document.getElementById('stat-days-left').textContent = daysLeft === 0 ? 'Ready!' : daysLeft + 'd';
+
+    // Eligibility
+    const pct = daysSince !== null ? Math.min(100, Math.round((daysSince / 90) * 100)) : 100;
+    document.getElementById('eligibility-fill').style.width = pct + '%';
+    document.getElementById('eligibility-label').textContent = pct >= 100 ? 'Eligible now!' : `${daysSince} of 90 days`;
+    const tag = document.getElementById('eligibility-tag');
+    if (pct >= 100) { tag.className = 'status-badge active'; tag.textContent = '✅ Eligible'; document.getElementById('eligibility-banner').style.display = 'block'; }
+    else { tag.className = 'status-badge closed'; tag.textContent = `⏳ ${daysLeft} days left`; }
+
+    // Toggle
+    const toggle = document.getElementById('availToggle');
+    if (d.available) {
+      toggle.classList.add('on');
+      document.getElementById('avail-label').textContent = 'Available to Donate';
+      document.getElementById('avail-sublabel').textContent = 'Seekers can contact you';
+    } else {
+      toggle.classList.remove('on');
+      document.getElementById('avail-label').textContent = 'Not Available';
+      document.getElementById('avail-sublabel').textContent = 'Tap to mark available';
+    }
+
+    // Badges
+    renderBadges(d.total_donations || 0);
+    renderDonationHistory(d);
+  }
+
+  function renderBadges(totalDonations) {
+    document.getElementById('badges-grid').innerHTML = BADGES_CONFIG.map(b => `
+      <div class="badge-item ${totalDonations < b.required ? 'locked' : ''}">
+        <div class="badge-icon">${b.icon}</div>
+        <div class="badge-name">${b.name}</div>
+        <div class="badge-desc">${b.desc}</div>
+        ${totalDonations >= b.required
+          ? '<div style="margin-top:6px;font-size:0.7rem;font-weight:700;color:#059669;">✅ Earned</div>'
+          : `<div style="margin-top:6px;font-size:0.7rem;color:#9CA3AF;">${b.required - totalDonations} more to go</div>`}
+      </div>`).join('');
+  }
+
+  function renderDonationHistory(d) {
+    const list = document.getElementById('donations-list');
+    if (!d.verified_donations || d.verified_donations.length === 0) return;
+    list.innerHTML = d.verified_donations.map(don => `
+      <div class="donation-item">
+        <div class="donation-date-badge">${formatDate(don.donation_date)}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:0.95rem;">${don.blood_bank_name}</div>
+          <div style="font-size:0.82rem;color:#4B5563;">${don.units_donated} unit(s) • ${don.donor_blood_group} • Cert: ${don.certificate_number}</div>
+        </div>
+        <span class="status-badge active">Verified ✓</span>
+      </div>`).join('');
+  }
+
+  async function loadNearbyRequests() {
+    const list = document.getElementById('nearby-requests-list');
+    try {
+      const q = query(collection(db, 'requests'),
+        where('status', 'in', ['ACTIVE', 'DONOR_RESPONDING']),
+        where('blood_group_needed', '==', donorData.blood_group),
+        orderBy('created_at', 'desc'));
+      const snap = await getDocs(q);
+      const requests = snap.empty ? getMockRequests() : snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderNearbyRequests(requests, list);
+    } catch {
+      renderNearbyRequests(getMockRequests(), list);
+    }
+  }
+
+  function getMockRequests() {
+    return [{ id:'mock1', request_id:'RKT12345678', blood_group_needed: donorData.blood_group || 'O+', hospital_name:'Bombay Hospital', hospital_address:'New Palasia, Indore, MP', seeker_phone:'+919876543210', urgency_level:'CRITICAL', units_needed:2, status:'ACTIVE', contacted_donors:[], created_at:{ toDate:()=>new Date(Date.now()-3600000) } }];
+  }
+
+  function renderNearbyRequests(requests, list) {
+    if (!requests.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">😊</div><h3>No urgent requests right now</h3><p>We'll notify you when someone nearby needs your blood group.</p></div>`;
+      return;
+    }
+    list.innerHTML = requests.map(r => {
+      const urgencyClass = r.urgency_level?.toLowerCase() || 'normal';
+      const alreadyResponded = r.contacted_donors?.some(d => d.donor_id === donorData.id);
+      return `
+        <div class="request-card ${urgencyClass} mb-3">
+          <div class="d-flex align-items-start justify-content-between mb-2 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3">
+              <div class="blood-badge">${r.blood_group_needed}</div>
+              <div>
+                <div style="font-weight:700;font-family:'Poppins',sans-serif;">${r.hospital_name}</div>
+                <div style="font-size:0.82rem;color:#4B5563;">${r.hospital_address}</div>
+              </div>
+            </div>
+            <span class="urgency-badge ${urgencyClass}">${r.urgency_level}</span>
+          </div>
+          <div style="font-size:0.78rem;color:#4B5563;margin-bottom:12px;">
+            ${r.units_needed} unit(s) • ${timeAgo(r.created_at)} •
+            <span style="font-family:'Poppins',sans-serif;font-weight:700;color:#DC3545;">ID: ${r.request_id}</span>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            ${alreadyResponded
+              ? `<span style="background:#D1FAE5;color:#059669;padding:10px 16px;border-radius:10px;font-size:0.85rem;font-weight:700;flex:1;text-align:center;">✅ You responded</span>`
+              : `<button class="btn-primary-red flex-grow-1" onclick="respondToRequest('${r.id}','${r.request_id}')" style="justify-content:center;padding:10px;">
+                  <i class="bi bi-heart-fill"></i> I Can Donate
+                </button>`
+            }
+            <a href="tel:${r.seeker_phone}" class="btn-outline-red" style="padding:10px 14px;" title="Call Seeker">
+              <i class="bi bi-telephone-fill"></i>
+            </a>
+            <a href="donor-confirm.html?id=${r.request_id}" class="btn-outline-red" style="padding:10px 14px;" title="I already donated">
+              ✓ Donated
+            </a>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  window.respondToRequest = async function(docId, requestId) {
+    const donorEntry = {
+      donor_id: donorData.id,
+      donor_name: donorData.name,
+      donor_phone: donorData.phone,
+      blood_group: donorData.blood_group,
+      responded_at: new Date().toISOString()
+    };
+    try {
+      await updateDoc(doc(db, 'requests', docId), {
+        status: 'DONOR_RESPONDING',
+        contacted_donors: arrayUnion(donorEntry),
+        updated_at: serverTimestamp()
+      });
+    } catch { /* demo mode */ }
+    showToast('✅ Response sent! Call the seeker or go to the hospital. Use ID ' + requestId + ' to confirm after donating.', 'success', 5000);
+    loadNearbyRequests();
+  };
+
+  window.toggleAvailability = async function() {
+    const toggle = document.getElementById('availToggle');
+    const newVal = !donorData.available;
+    donorData.available = newVal;
+    toggle.classList.toggle('on', newVal);
+    document.getElementById('avail-label').textContent = newVal ? 'Available to Donate' : 'Not Available';
+    document.getElementById('avail-sublabel').textContent = newVal ? 'Seekers can contact you' : 'Tap to mark available';
+    try {
+      if (donorId) await updateDoc(doc(db, 'donors', donorId), { available: newVal, updated_at: serverTimestamp() });
+      showToast(newVal ? '✅ You are now available for donations!' : '🔴 You are now marked unavailable.', newVal ? 'success' : 'warning');
+    } catch(e) { showToast('Status updated locally.', 'info'); }
+  };
+
+  window.saveProfile = async function() {
+    const btn = document.getElementById('saveProfileBtn');
+    setLoading(btn, true, 'Saving...');
+    const updates = {
+      name: document.getElementById('edit-name').value.trim(),
+      city: document.getElementById('edit-city').value.trim(),
+      last_donation_date: document.getElementById('edit-last-donation').value || null,
+      updated_at: serverTimestamp()
+    };
+    try {
+      if (donorId) await updateDoc(doc(db, 'donors', donorId), updates);
+      Object.assign(donorData, updates);
+      renderDonorProfile();
+      showToast('Profile updated successfully!', 'success');
+    } catch { showToast('Profile saved locally.', 'info'); }
+    setLoading(btn, false);
+  };
+
+  window.switchTab = function(tab, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    el.classList.add('active');
+  };
+
+  loadDonor();
+</script>
+<script src="../js/app.js"></script>
+</body>
+</html>

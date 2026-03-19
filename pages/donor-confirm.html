@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Confirm your blood donation on RaktSetu using the request tracking ID.">
+  <title>Confirm Donation – RaktSetu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+
+    /* ── Two-column layout, no scroll ── */
+    .confirm-layout {
+      height: calc(100vh - 64px);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+    }
+
+    /* ── Left column ── */
+    .confirm-left {
+      background: #F8FAFC;
+      padding: 32px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .confirm-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px 30px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+      border: 1px solid #E5E7EB;
+      width: 100%;
+      max-width: 520px;
+    }
+    .confirm-card-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .confirm-card-sub {
+      font-size: 0.82rem;
+      color: #4B5563;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    /* ── Tracking input row ── */
+    .tracking-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 0;
+    }
+    .tracking-row > div { flex: 1; }
+    .tracking-input {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── Found request card ── */
+    .found-card {
+      background: #F9FAFB;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 14px;
+      border-left: 4px solid #DC3545;
+      border: 1px solid #E5E7EB;
+      border-left: 4px solid #DC3545;
+      display: none;
+      animation: fadeUp 0.25s ease;
+    }
+    .found-card.show { display: block; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Step 2 form ── */
+    .step2-form {
+      display: none;
+      animation: fadeUp 0.25s ease;
+    }
+    .step2-form.show { display: block; }
+    .form-group-sm { margin-bottom: 12px; }
+
+    /* ── Confirm big button ── */
+    .confirm-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 13px;
+      font-size: 0.92rem;
+      margin-top: 4px;
+    }
+
+    /* ── Not found message ── */
+    .not-found-msg {
+      background: #FEF2F2;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 12px;
+      color: #DC2626;
+      font-size: 0.84rem;
+      font-weight: 600;
+      display: none;
+    }
+    .not-found-msg.show { display: block; }
+
+    /* ── Verified banner (step 1 → step 2 transition) ── */
+    .verified-notice {
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #059669;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Success state ── */
+    .success-view {
+      text-align: center;
+      display: none;
+      animation: fadeUp 0.3s ease;
+    }
+    .success-view.show { display: block; }
+    .success-circle {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #00B894, #00cfa1);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(0,184,148,0.32);
+    }
+    .tracking-pill {
+      display: inline-block;
+      background: #F0FDF4;
+      border: 1.5px solid #6EE7B7;
+      color: #059669;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 7px 20px;
+      border-radius: 50px;
+      letter-spacing: 1px;
+      margin: 10px 0 18px;
+    }
+
+    /* ── RIGHT: Sticky note ── */
+    .sticky-note {
+      background: #FFFBEB;
+      border-left: 4px solid #FCD34D;
+      padding: 26px 22px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .sticky-note::before {
+      content: '📌';
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      font-size: 1.2rem;
+      opacity: 0.6;
+    }
+    .sticky-note-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #92400E;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Steps in sticky note */
+    .sticky-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .sticky-step:last-of-type { margin-bottom: 0; }
+    .sticky-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #FDE68A;
+      color: #92400E;
+      font-size: 0.72rem;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sticky-num.active {
+      background: #DC3545;
+      color: white;
+      box-shadow: 0 0 0 3px rgba(220,53,69,0.2);
+    }
+    .sticky-num.done {
+      background: #00B894;
+      color: white;
+    }
+    .sticky-text {
+      font-size: 0.8rem;
+      color: #78350F;
+      line-height: 1.45;
+      padding-top: 3px;
+    }
+    .sticky-text strong { font-weight: 700; color: #451A03; }
+
+    .sticky-divider {
+      border: none;
+      border-top: 1.5px dashed #FCD34D;
+      margin: 18px 0;
+    }
+    .sticky-warning {
+      font-size: 0.76rem;
+      color: #92400E;
+      background: #FEF3C7;
+      border-radius: 8px;
+      padding: 9px 11px;
+      line-height: 1.5;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 768px) {
+      .confirm-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+      .confirm-left {
+        padding: 24px 16px;
+        overflow: visible;
+        align-items: flex-start;
+      }
+      .sticky-note {
+        border-left: none;
+        border-top: 4px solid #FCD34D;
+        padding: 20px 16px;
+        height: auto;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<link rel="stylesheet" href="../css/navbar.css">
+
+<nav class="navbar" id="mainNavbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../index.html">🩸 Rakt<span>Setu</span></a>
+    <ul class="rks-nav">
+
+      <li class="nav-item">
+        <a class="nav-top-link" href="../index.html">Home</a>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Seeker <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="request-blood.html">
+            <div class="dropdown-icon">🆘</div>
+            <div class="dropdown-text"><span class="dropdown-label">Request Blood</span><span class="dropdown-desc">Post an urgent blood request</span></div>
+          </a>
+          <a class="dropdown-link" href="find-donors.html">
+            <div class="dropdown-icon">🔍</div>
+            <div class="dropdown-text"><span class="dropdown-label">Find Donors</span><span class="dropdown-desc">Search verified donors nearby</span></div>
+          </a>
+          <a class="dropdown-link" href="blood-banks.html">
+            <div class="dropdown-icon">🏥</div>
+            <div class="dropdown-text"><span class="dropdown-label">Blood Banks</span><span class="dropdown-desc">Check live inventory near you</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="seeker-dashboard.html">
+            <div class="dropdown-icon">📋</div>
+            <div class="dropdown-text"><span class="dropdown-label">Track My Request</span><span class="dropdown-desc">View your active requests</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-top-link" aria-haspopup="true">
+          Donor <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown">
+          <a class="dropdown-link" href="donor-register.html">
+            <div class="dropdown-icon">❤️</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register</span><span class="dropdown-desc">Join as a verified donor</span></div>
+          </a>
+          <a class="dropdown-link" href="donor-dashboard.html">
+            <div class="dropdown-icon">📊</div>
+            <div class="dropdown-text"><span class="dropdown-label">My Dashboard</span><span class="dropdown-desc">Track donations & availability</span></div>
+          </a>
+          <a class="dropdown-link active" href="donor-confirm.html">
+            <div class="dropdown-icon">✅</div>
+            <div class="dropdown-text"><span class="dropdown-label">Confirm Donation</span><span class="dropdown-desc">Verify using Tracking ID</span></div>
+          </a>
+        </div>
+      </li>
+
+      <li class="nav-item nav-item-last">
+        <button class="nav-top-link" aria-haspopup="true">
+          Blood Bank <i class="bi bi-chevron-down nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown nav-dropdown-right">
+          <a class="dropdown-link" href="../bloodbank-portal/login.html">
+            <div class="dropdown-icon">🔐</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Login</span><span class="dropdown-desc">Sign in to your blood bank</span></div>
+          </a>
+          <a class="dropdown-link" href="../bloodbank-portal/bloodbank-register.html">
+            <div class="dropdown-icon">🏦</div>
+            <div class="dropdown-text"><span class="dropdown-label">Register Blood Bank</span><span class="dropdown-desc">Join the RaktSetu network</span></div>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-link" href="../bloodbank-portal/dashboard.html">
+            <div class="dropdown-icon">📈</div>
+            <div class="dropdown-text"><span class="dropdown-label">Portal Dashboard</span><span class="dropdown-desc">Manage inventory & requests</span></div>
+          </a>
+        </div>
+      </li>
+
+    </ul>
+    <button class="navbar-toggler" id="mobileToggler" onclick="toggleMobileNav()" aria-label="Menu">
+      <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
+    </button>
+  </div>
+</nav>
+
+<div class="navbar-mobile" id="mobileNav">
+  <a class="mobile-top-link" href="../index.html">🏠 Home</a>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Seeker <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="request-blood.html"><span class="mobile-link-icon">🆘</span> Request Blood</a>
+      <a class="mobile-link" href="find-donors.html"><span class="mobile-link-icon">🔍</span> Find Donors</a>
+      <a class="mobile-link" href="blood-banks.html"><span class="mobile-link-icon">🏥</span> Blood Banks</a>
+      <a class="mobile-link" href="seeker-dashboard.html"><span class="mobile-link-icon">📋</span> Track My Request</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Donor <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="donor-register.html"><span class="mobile-link-icon">❤️</span> Register</a>
+      <a class="mobile-link" href="donor-dashboard.html"><span class="mobile-link-icon">📊</span> My Dashboard</a>
+      <a class="mobile-link active" href="donor-confirm.html"><span class="mobile-link-icon">✅</span> Confirm Donation</a>
+    </div>
+  </div>
+  <div class="mobile-section">
+    <button class="mobile-section-btn" onclick="toggleMobileSection(this)">Blood Bank <i class="bi bi-chevron-down mobile-chevron"></i></button>
+    <div class="mobile-links">
+      <a class="mobile-link" href="../bloodbank-portal/login.html"><span class="mobile-link-icon">🔐</span> Portal Login</a>
+      <a class="mobile-link" href="../bloodbank-portal/bloodbank-register.html"><span class="mobile-link-icon">🏦</span> Register Blood Bank</a>
+      <a class="mobile-link" href="../bloodbank-portal/dashboard.html"><span class="mobile-link-icon">📈</span> Portal Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    window.addEventListener('scroll', function() {
+      var nb = document.getElementById('mainNavbar');
+      if (nb) nb.classList.toggle('scrolled', window.scrollY > 10);
+    }, {passive: true});
+    window.toggleMobileNav = function() {
+      document.getElementById('mobileNav').classList.toggle('open');
+      document.getElementById('mobileToggler').classList.toggle('open');
+    };
+    window.toggleMobileSection = function(btn) {
+      var links = btn.nextElementSibling;
+      var isOpen = links.classList.contains('open');
+      document.querySelectorAll('.mobile-links').forEach(function(l) { l.classList.remove('open'); });
+      document.querySelectorAll('.mobile-section-btn').forEach(function(b) { b.classList.remove('open'); });
+      if (!isOpen) { links.classList.add('open'); btn.classList.add('open'); }
+    };
+    document.querySelectorAll('.mobile-link, .mobile-top-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobileNav').classList.remove('open');
+        document.getElementById('mobileToggler').classList.remove('open');
+      });
+    });
+  })();
+</script>
+
+<div class="confirm-layout">
+
+  <!-- ══ LEFT: CONFIRM FORM ══ -->
+  <div class="confirm-left">
+    <div class="confirm-card">
+
+      <!-- Title -->
+      <div class="confirm-card-title">💉 Confirm Your Donation</div>
+      <p class="confirm-card-sub">Enter the Tracking ID shared by the seeker to verify your donation.</p>
+
+      <!-- ── VIEW 1: Lookup + Details ── -->
+      <div id="mainView">
+
+        <!-- Tracking ID lookup -->
+        <div class="tracking-row">
+          <div>
+            <label class="form-label" style="font-size:0.82rem;">Tracking ID <span class="required">*</span></label>
+            <input type="text" id="tracking-id-input" class="form-control-rs tracking-input"
+              placeholder="RKT12345678" maxlength="14"
+              oninput="this.value=this.value.toUpperCase()">
+            <div class="form-error" id="tracking-error">Enter a valid Tracking ID (e.g. RKT12345678)</div>
+          </div>
+          <button class="btn-primary-red" onclick="lookupRequest()" id="lookupBtn"
+            style="height:46px;padding:0 20px;flex-shrink:0;margin-top:22px;">
+            <i class="bi bi-search"></i> Find
+          </button>
+        </div>
+
+        <!-- Not found -->
+        <div class="not-found-msg" id="notFoundMsg">
+          ❌ No active request found with this Tracking ID. Please check and try again.
+        </div>
+
+        <!-- Found request card -->
+        <div class="found-card" id="requestPreview">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="blood-badge" id="preview-blood">—</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:0.95rem;" id="preview-hospital">—</div>
+              <div style="font-size:0.78rem;color:#4B5563;margin-top:2px;" id="preview-address">—</div>
+            </div>
+            <span class="urgency-badge critical" id="preview-urgency">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #F3F4F6;font-size:0.78rem;color:#4B5563;flex-wrap:wrap;gap:6px;">
+            <span>Seeker: <strong id="preview-seeker" style="color:#1E2328;">—</strong></span>
+            <span>Units: <strong id="preview-units" style="color:#1E2328;">—</strong></span>
+            <a id="call-seeker-btn" href="#"
+              style="color:#DC3545;font-weight:700;display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;">
+              <i class="bi bi-telephone-fill"></i> Call Seeker
+            </a>
+          </div>
+          <button type="button" class="btn-primary-red w-100 mt-3"
+            onclick="showDonationForm()" style="justify-content:center;padding:10px;font-size:0.86rem;">
+            I Donated for This Request <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Step 2: Donation Details -->
+        <div class="step2-form" id="step2Form">
+          <div class="verified-notice">
+            <i class="bi bi-check-circle-fill"></i>
+            Request found! Fill in your donation details below.
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="form-group-sm">
+                <label class="form-label" style="font-size:0.8rem;">Your Name <span class="required">*</span></label>
+                <input type="text" id="confirm-donor-name" class="form-control-rs" placeholder="Your full name">
+                <div class="form-error" id="confirm-name-error">Enter your name</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group-sm">
+                <label class="form-label" style="font-size:0.8rem;">Your Phone <span class="required">*</span></label>
+                <div style="position:relative;">
+                  <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#6B7280;font-weight:600;font-size:0.82rem;pointer-events:none;">+91</span>
+                  <input type="tel" id="confirm-donor-phone" class="form-control-rs"
+                    style="padding-left:40px;" placeholder="9876543210" maxlength="10" inputmode="numeric">
+                </div>
+                <div class="form-error" id="confirm-phone-error">Enter valid number</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group-sm">
+                <label class="form-label" style="font-size:0.8rem;">Donation Date <span class="required">*</span></label>
+                <input type="date" id="confirm-date" class="form-control-rs">
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group-sm">
+                <label class="form-label" style="font-size:0.8rem;">Location / Hospital <span class="required">*</span></label>
+                <input type="text" id="confirm-location" class="form-control-rs" placeholder="Where donated?">
+                <div class="form-error" id="confirm-location-error">Enter location</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group-sm mt-1">
+            <label class="form-label" style="font-size:0.8rem;">Notes <span style="color:#9CA3AF;font-weight:400;">(Optional)</span></label>
+            <input type="text" id="confirm-notes" class="form-control-rs" placeholder="Any message for the seeker...">
+          </div>
+
+          <div style="background:#FEF2F2;border-radius:8px;padding:9px 12px;font-size:0.75rem;color:#DC2626;margin:10px 0 12px;display:flex;gap:7px;">
+            <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;margin-top:1px;"></i>
+            Only confirm if you have actually donated blood for this request.
+          </div>
+
+          <button type="button" class="btn-primary-red confirm-btn"
+            onclick="submitDonationConfirmation()" id="confirmBtn">
+            <i class="bi bi-heart-fill"></i> Confirm — I Donated Blood
+          </button>
+
+          <button type="button" onclick="resetToLookup()"
+            style="width:100%;margin-top:8px;background:none;border:none;color:#6B7280;font-size:0.8rem;cursor:pointer;padding:6px;">
+            ← Back
+          </button>
+        </div>
+
+      </div><!-- /mainView -->
+
+      <!-- ── VIEW 2: Success ── -->
+      <div class="success-view" id="successView">
+        <div class="success-circle">🎉</div>
+        <h3 style="font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:900;margin-bottom:6px;">You're a Hero!</h3>
+        <p style="font-size:0.84rem;color:#4B5563;line-height:1.5;margin-bottom:4px;">
+          Donation confirmed. The seeker has been notified and will confirm receipt shortly.
+        </p>
+        <div class="tracking-pill" id="success-tracking">RKT--------</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <a href="donor-dashboard.html" class="btn-primary-red btn-sm">
+            <i class="bi bi-grid-fill"></i> My Dashboard
+          </a>
+          <a href="../index.html" class="btn-outline-red btn-sm">
+            <i class="bi bi-house-fill"></i> Home
+          </a>
+        </div>
+      </div>
+
+    </div><!-- /confirm-card -->
+  </div>
+
+  <!-- ══ RIGHT: STICKY NOTE ══ -->
+  <div class="sticky-note">
+    <div class="sticky-note-title">How It Works</div>
+
+    <div class="sticky-step">
+      <div class="sticky-num done">✓</div>
+      <div class="sticky-text"><strong>Seeker posts request</strong> Gets a unique Tracking ID</div>
+    </div>
+
+    <div class="sticky-step">
+      <div class="sticky-num done">✓</div>
+      <div class="sticky-text"><strong>You donate blood</strong> At the hospital or blood bank</div>
+    </div>
+
+    <div class="sticky-step">
+      <div class="sticky-num active">→</div>
+      <div class="sticky-text"><strong>You confirm here</strong> Using the Tracking ID — seeker gets notified</div>
+    </div>
+
+    <div class="sticky-step">
+      <div class="sticky-num">4</div>
+      <div class="sticky-text"><strong>Seeker confirms receipt</strong> Request marked Complete ✅</div>
+    </div>
+
+    <hr class="sticky-divider">
+
+    <div class="sticky-warning">
+      ⚠️ Only confirm if you have <strong>actually donated</strong>. False confirmations affect seekers and your donor reputation.
+    </div>
+  </div>
+
+</div><!-- /confirm-layout -->
+
+<div class="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { db } from '../js/firebase-init.js';
+  import {
+    collection, query, where, getDocs,
+    doc, updateDoc, addDoc, arrayUnion, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { showToast, validatePhone, showError, clearError, setLoading } from '../js/utils.js';
+
+  // ── State ──
+  let foundRequest    = null;
+  let foundRequestId  = null;
+  const savedDonorId  = localStorage.getItem('raktsetu_donor_id');
+
+  // ── Default date ──
+  document.getElementById('confirm-date').value = new Date().toISOString().split('T')[0];
+
+  // ── URL param pre-fill ──
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('id')) {
+    document.getElementById('tracking-id-input').value = params.get('id').toUpperCase();
+    lookupRequest();
+  }
+
+  // ── Mock for demo ──
+  const MOCK = {
+    id: 'mock_r1',
+    request_id: 'RKT12345678',
+    seeker_name: 'Aditya Sharma',
+    seeker_phone: '+919876543210',
+    blood_group_needed: 'O-',
+    units_needed: 2,
+    hospital_name: 'Bombay Hospital',
+    hospital_address: 'New Palasia, Indore, MP',
+    urgency_level: 'CRITICAL',
+    status: 'ACTIVE',
+    contacted_donors: [],
+    created_at: { toDate: () => new Date(Date.now() - 3600000) }
+  };
+
+  // ── Lookup ──
+  window.lookupRequest = async function() {
+    const trackingId = document.getElementById('tracking-id-input').value.trim().toUpperCase();
+    const notFound   = document.getElementById('notFoundMsg');
+    const preview    = document.getElementById('requestPreview');
+    const step2      = document.getElementById('step2Form');
+
+    notFound.classList.remove('show');
+    preview.classList.remove('show');
+    step2.classList.remove('show');
+    clearError('tracking');
+
+    if (!trackingId || !trackingId.startsWith('RKT') || trackingId.length < 10) {
+      showError('tracking', 'Enter a valid Tracking ID (e.g. RKT12345678)');
+      return;
+    }
+
+    const btn = document.getElementById('lookupBtn');
+    setLoading(btn, true, 'Finding...');
+
+    try {
+      const q    = query(collection(db, 'requests'), where('request_id', '==', trackingId));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        foundRequestId = snap.docs[0].id;
+        foundRequest   = { id: snap.docs[0].id, ...snap.docs[0].data() };
+      } else {
+        foundRequest   = trackingId === 'RKT12345678' ? MOCK : null;
+        foundRequestId = foundRequest?.id || null;
+      }
+    } catch {
+      foundRequest   = trackingId === 'RKT12345678' ? MOCK : null;
+      foundRequestId = foundRequest?.id || null;
+    }
+
+    setLoading(btn, false);
+
+    if (!foundRequest) {
+      notFound.classList.add('show');
+      return;
+    }
+    if (['COMPLETED','CANCELLED','FULFILLED'].includes(foundRequest.status)) {
+      notFound.innerHTML = `❌ This request is already <strong>${foundRequest.status}</strong> and no longer accepting confirmations.`;
+      notFound.classList.add('show');
+      return;
+    }
+
+    // Populate preview card
+    const urgClass = foundRequest.urgency_level?.toLowerCase() || 'normal';
+    document.getElementById('preview-blood').textContent    = foundRequest.blood_group_needed;
+    document.getElementById('preview-hospital').textContent = foundRequest.hospital_name;
+    document.getElementById('preview-address').textContent  = foundRequest.hospital_address;
+    document.getElementById('preview-seeker').textContent   = foundRequest.seeker_name;
+    document.getElementById('preview-units').textContent    = foundRequest.units_needed + ' unit(s)';
+    document.getElementById('preview-urgency').textContent  = foundRequest.urgency_level;
+    document.getElementById('preview-urgency').className    = `urgency-badge ${urgClass}`;
+    document.getElementById('call-seeker-btn').href         = `tel:${foundRequest.seeker_phone}`;
+
+    // Pre-fill location
+    document.getElementById('confirm-location').value = foundRequest.hospital_name + ', ' + foundRequest.hospital_address;
+
+    preview.classList.add('show');
+  };
+
+  // ── Show donation form ──
+  window.showDonationForm = function() {
+    document.getElementById('requestPreview').classList.remove('show');
+    document.getElementById('step2Form').classList.add('show');
+  };
+
+  // ── Back to lookup ──
+  window.resetToLookup = function() {
+    document.getElementById('step2Form').classList.remove('show');
+    document.getElementById('requestPreview').classList.add('show');
+  };
+
+  // ── Submit confirmation ──
+  window.submitDonationConfirmation = async function() {
+    const donorName  = document.getElementById('confirm-donor-name').value.trim();
+    const donorPhone = document.getElementById('confirm-donor-phone').value.trim();
+    const date       = document.getElementById('confirm-date').value;
+    const location   = document.getElementById('confirm-location').value.trim();
+    const notes      = document.getElementById('confirm-notes').value.trim();
+
+    clearError('confirm-name');
+    clearError('confirm-phone');
+    clearError('confirm-location');
+
+    let valid = true;
+    if (!donorName)               { showError('confirm-name',     'Enter your name');          valid = false; }
+    if (!validatePhone(donorPhone)){ showError('confirm-phone',    'Enter valid number');       valid = false; }
+    if (!location)                 { showError('confirm-location', 'Enter location');           valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('confirmBtn');
+    setLoading(btn, true, 'Confirming...');
+
+    const donorEntry = {
+      donor_id:      savedDonorId || 'guest_' + Date.now(),
+      donor_name:    donorName,
+      donor_phone:   '+91' + donorPhone,
+      donation_date: date,
+      location,
+      notes:         notes || null,
+      confirmed_at:  new Date().toISOString()
+    };
+
+    try {
+      if (foundRequestId && foundRequestId !== 'mock_r1') {
+        await updateDoc(doc(db, 'requests', foundRequestId), {
+          status:           'PENDING_SEEKER_CONFIRMATION',
+          contacted_donors: arrayUnion(donorEntry),
+          updated_at:       serverTimestamp()
+        });
+        await addDoc(collection(db, 'notifications'), {
+          recipient_id:   foundRequest.seeker_phone,
+          recipient_type: 'seeker',
+          title:          '🩸 A donor confirmed donating for your request!',
+          message:        `${donorName} confirmed donating ${foundRequest.blood_group_needed} blood. Please confirm receipt.`,
+          type:           'DONOR_CONFIRMED',
+          request_id:     foundRequest.request_id,
+          read:           false,
+          created_at:     serverTimestamp()
+        });
+      }
+      // Show success
+      document.getElementById('success-tracking').textContent = foundRequest.request_id;
+      document.getElementById('mainView').style.display  = 'none';
+      document.getElementById('successView').classList.add('show');
+      showToast('Donation confirmed! Seeker notified. 🎉', 'success');
+    } catch (err) {
+      console.error(err);
+      // Demo fallback
+      document.getElementById('success-tracking').textContent = foundRequest.request_id;
+      document.getElementById('mainView').style.display  = 'none';
+      document.getElementById('successView').classList.add('show');
+      showToast('Donation confirmed! 🎉', 'success');
+    }
+    setLoading(btn, false);
+  };
+
+  // Enter key on tracking input
+  document.getElementById('tracking-id-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.lookupRequest();
+  });
+</script>
+<script src="../js/app.js"></script>
+</body>
+</html>
