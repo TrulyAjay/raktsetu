@@ -107,18 +107,19 @@
 /* ── Dropdown panel ── */
 .nav-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: 100%;
   left: 50%;
-  transform: translateX(-50%) translateY(-6px);
+  transform: translateX(-50%) translateY(0);
   background: white;
   border-radius: 14px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
   border: 1px solid #F0F0F0;
   min-width: 240px;
-  padding: 8px;
+  /* padding-top creates invisible bridge — cursor never loses hover state */
+  padding: 16px 8px 8px 8px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition: opacity 0.18s ease;
   z-index: 1000;
 }
 
@@ -126,7 +127,7 @@
 .nav-dropdown::before {
   content: '';
   position: absolute;
-  top: -5px;
+  top: 7px;
   left: 50%;
   transform: translateX(-50%) rotate(45deg);
   width: 10px; height: 10px;
@@ -141,12 +142,14 @@
   pointer-events: all;
   transform: translateX(-50%) translateY(0);
 }
+/* Keep hover active while moving to dropdown */
+.rks-nav .nav-item:hover { z-index: 1001; }
 
 /* Right-aligned for last item */
 .nav-dropdown-right {
   left: auto !important;
   right: 0 !important;
-  transform: translateY(-6px) !important;
+  transform: translateY(0) !important;
 }
 .nav-dropdown-right::before {
   left: auto;
@@ -155,8 +158,8 @@
 }
 .rks-nav .nav-item:hover .nav-dropdown-right {
   transform: translateY(0) !important;
-  opacity: 1;
-  pointer-events: all;
+  opacity: 1 !important;
+  pointer-events: all !important;
 }
 
 /* ── Dropdown items ── */
